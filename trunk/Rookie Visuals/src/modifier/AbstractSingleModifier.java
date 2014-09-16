@@ -15,7 +15,7 @@ public abstract class AbstractSingleModifier implements Modifier
     public AbstractSingleModifier(String paramName)
     {
         this.parameterName = paramName;
-        this.finished  = false;
+        this.finished      = false;
     }
 
     

@@ -3,6 +3,7 @@ package visual;
 import static java.awt.Frame.NORMAL;
 import parameter.DefaultParameter;
 import parameter.Parameter;
+import processing.core.PApplet;
 import static processing.core.PConstants.TRIANGLES;
 import processing.core.PGraphics;
 import processing.core.PImage;
@@ -29,6 +30,8 @@ public class SplitImage extends AbstractVisual
     {
         preRender(g);
         g.textureMode(NORMAL);
+        // move into abtract base class as fixed parameter: g.blendMode(PApplet.EXCLUSION);
+
         g.noStroke();
         final float dX = aspect * splitSize.get();
         final float dY =          splitSize.get();
@@ -42,6 +45,7 @@ public class SplitImage extends AbstractVisual
             g.vertex( aspect+dX,  1-dY, 0, 1, 1);
             g.vertex(-aspect+dX,  1-dY, 0, 0, 1);
         g.endShape();
+        g.blendMode(PApplet.BLEND);
     }
   
   

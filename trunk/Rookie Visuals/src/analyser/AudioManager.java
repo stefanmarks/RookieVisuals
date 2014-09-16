@@ -212,18 +212,19 @@ public class AudioManager
         String type = control.getType().toString();
         if ( control instanceof BooleanControl )
         {
-            return "    Control: " + type + " (boolean)";
+            return "    Control: " + type + " (boolean) = " + ((BooleanControl) control).getValue();
         }
         else if ( control instanceof EnumControl )
         {
-            return "    Control:" + type + " (enum: " + control.toString() + ")";
+            return "    Control:" + type + " (enum: " + control.toString() + ") = " + ((EnumControl) control).getValue();
         }
         else if ( control instanceof FloatControl )
         {
             FloatControl floatControl = (FloatControl) control;
             return "    Control: " + type + " (float: from "
                     + floatControl.getMinimum() + " to "
-                    + floatControl.getMaximum() + ")";
+                    + floatControl.getMaximum() + ") = "
+                    + ((FloatControl) control).getValue();
         }
         else if ( control instanceof CompoundControl )
         {
