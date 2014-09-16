@@ -15,8 +15,8 @@ public class DefaultParameter implements Parameter
      */
     public DefaultParameter(String name, float initialValue)
     {
-        this.name     = name;
-        this.value    = initialValue;
+        this.name  = name;
+        this.value = initialValue;
     }
     
 

@@ -18,7 +18,7 @@ public class AudioInput
     /**
      * Creates an audio input object.
      * 
-     * @param port  the port mixer
+     * @param line  the input line
      * @param mixer the line mixer
      */
     public AudioInput(Line line, Mixer mixer)
@@ -92,6 +92,7 @@ public class AudioInput
     {
         return mixer.getMixerInfo().getName();
     }
+    
     
     private Line         line;
     private Mixer        mixer;

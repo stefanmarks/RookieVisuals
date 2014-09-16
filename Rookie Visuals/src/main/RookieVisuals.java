@@ -11,7 +11,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.net.SocketException;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Handler;
 import java.util.logging.Logger;
@@ -20,16 +19,15 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import modifier.ConstantChange;
 import modifier.AudioSignal_FrequencyIntensity;
-import modifier.Oscillator;
 import modifier.RandomGlitch;
 import modifier.SetTranslation;
 import modifier.SetScale;
-import modifier.SetValue;
 import processing.core.PApplet;
 import timing.TimeBase;
 import visual.SplitImage;
 import visual.Stripes;
 import visual.Visual;
+import visual.VisualManager;
 
 /**
  * Program for the background visuals of the Rookie 2014 show.
@@ -56,7 +54,7 @@ public class RookieVisuals extends PApplet
         this.runInFullscreen = fullscreen;
         
         timeBase = new TimeBase(60);
-        visuals  = new LinkedList<>();
+        visualManager = new VisualManager();
     }
     
          
@@ -73,7 +71,7 @@ public class RookieVisuals extends PApplet
         else
         {
             final int WINDOW_WIDTH  = 1200;
-            final int WINDOW_HEIGHT = WINDOW_WIDTH * 9 / 16; // 16:9 ratio
+            final int WINDOW_HEIGHT = WINDOW_WIDTH * 1 / 3; // 4:1 ratio
             size(WINDOW_WIDTH, WINDOW_HEIGHT, P3D);
         }
         
@@ -83,16 +81,12 @@ public class RookieVisuals extends PApplet
         // find inputs
         audioManager = new AudioManager();
         List<AudioInput> inputs = audioManager.getInputs();
-//        System.out.println("Audio Inputs: ");
-//        for ( int i = 0 ; i < inputs.size() ; i++ )
-//        {
-//            System.out.println(i + ":\t" + inputs.get(i));
-//        }
         AudioInput input = inputs.get(0);
         minim = new Minim(this);
         minim.setInputMixer(input.getMixer());
+        
         // create audio analyser
-        audioAnalyser = new SpectrumAnalyser(25, 100, 1, 1);
+        audioAnalyser = new SpectrumAnalyser(25, 20, 3, 1);
         // attach input to audio analyser
         audioAnalyser.attachToAudio(minim.getLineIn());
         
@@ -107,24 +101,27 @@ public class RookieVisuals extends PApplet
     private void setupVisuals()
     {
         Visual v = new SplitImage("RookieLogo", loadImage("rookie_logo_black.png"));
-        v.addModifier(new SetTranslation(width / 2, height / 2));
-        v.addModifier(new SetScale(300)); 
+        v.addModifier(new SetScale(0.25f)); 
         v.addModifier(new RandomGlitch("split", 0.01f, -0.1f, 0.1f));
-        v.addModifier(new SetValue("angle", 0));
-        v.addModifier(new Oscillator("angle", 0.01f, 0, 10));
-        visuals.add(v);
+        //v.addModifier(new Oscillator("angle", 0.01f, 0, 0, 10));
+        visualManager.add(v);
 
-        Stripes s1 = new Stripes(width, height, -40, 40, 4.0f);
-        s1.addModifier(new SetTranslation(-(width - height) / 2, 0)); 
+        Stripes s1 = new Stripes("StripesL", 1, 2.0f, 1.0f, -0.1f, 0.1f, 0.01f);
+        s1.addModifier(new SetTranslation(-1.5f, -0.5f)); 
         s1.addModifier(new ConstantChange("offset", 0.5f));
-        s1.addModifier(new AudioSignal_FrequencyIntensity("stroke", audioAnalyser, 2, 4, 20)); // react to low frequencies
-        visuals.add(s1);
+        s1.addModifier(new AudioSignal_FrequencyIntensity("stroke[0]", audioAnalyser, 3, 0.01f, 0.05f)); // react to low frequencies
+        visualManager.add(s1);
         
-        Stripes s2 = new Stripes(width, height, -40, 40, 4.0f);
-        s2.addModifier(new SetTranslation(width - (width - height) / 2, 0)); 
+        Stripes s2 = new Stripes("StripesR", 5, 2.0f, 1.0f, -0.1f, 0.1f, 0.01f);
+        s2.addModifier(new SetTranslation(0.5f, -0.5f)); 
         s2.addModifier(new ConstantChange("offset", -0.5f));
-        s2.addModifier(new AudioSignal_FrequencyIntensity("stroke", audioAnalyser, 5, 4, 20)); // react to high frequencies
-        visuals.add(s2);
+        s2.addModifier(new AudioSignal_FrequencyIntensity("stroke[0]", audioAnalyser,  3, 0.01f, 0.01f)); // react to high frequencies
+        s2.addModifier(new AudioSignal_FrequencyIntensity("stroke[1]", audioAnalyser,  7, 0.01f, 0.02f));
+        s2.addModifier(new AudioSignal_FrequencyIntensity("stroke[2]", audioAnalyser, 10, 0.01f, 0.05f));
+        s2.addModifier(new AudioSignal_FrequencyIntensity("stroke[3]", audioAnalyser, 15, 0.01f, 0.07f));
+        s2.addModifier(new AudioSignal_FrequencyIntensity("stroke[4]", audioAnalyser, 20, 0.01f, 0.10f));
+        visualManager.add(s2);
+
     }
     
     /**
@@ -153,23 +150,12 @@ public class RookieVisuals extends PApplet
     public synchronized void draw()
     {
         timeBase.tick();
+        visualManager.update(timeBase);
         
-        // animate visuals
-        for ( Visual visual : visuals )
-        {
-              visual.update(timeBase);
-        }
-
-        // render visuals
         background(255);
-        for ( Visual visual : visuals )
-        {
-            pushMatrix();
-            pushStyle();
-            visual.render(this.g);
-            popStyle();
-            popMatrix();
-        }
+        translate(width / 2, height / 2); // screen centre is 0/0
+        scale(height);                    // Screen height rangs from -0.5 to 0.5
+        visualManager.render(this.g);
     }
 
     
@@ -184,6 +170,15 @@ public class RookieVisuals extends PApplet
             // plain keypress
             switch ( key )
             {
+                case 't' :
+                {
+                    Visual s1 = visualManager.find("StripesL");
+                    if ( s1 != null )
+                    {
+                        //s1
+                    }
+                    break;
+                }
             }
         }
         else
@@ -323,6 +318,6 @@ public class RookieVisuals extends PApplet
     
     // Visuals
     private final TimeBase      timeBase;
-    private final List<Visual>  visuals;
+    private final VisualManager visualManager;
 } 
 

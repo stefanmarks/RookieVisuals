@@ -22,6 +22,7 @@ public interface Parameter
      */
     public float get();
     
+    
     /**
      * Sets the new value of the parameter
      * 
