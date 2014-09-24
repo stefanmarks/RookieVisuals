@@ -1,5 +1,7 @@
 package modifier;
 
+import parameter.DefaultParameter;
+import parameter.Parameter;
 import timing.TimeBase;
 
 /**
@@ -12,16 +14,16 @@ public class SetTranslation extends AbstractMultiModifier
     public SetTranslation(float x, float y)
     {
         super(new String[] { "tX", "tY" });
-        this.tX = x;
-        this.tY = y;
+        tX = new DefaultParameter("tX", x); modifierParams.add(tX);
+        tY = new DefaultParameter("tY", y); modifierParams.add(tY);
     }
 
     
     @Override
     public void apply(TimeBase timeBase)
     {
-        parameters[0].set(tX);
-        parameters[1].set(tY);
+        if ( visualParams[0] != null ) { visualParams[0].set(tX.get()); }
+        if ( visualParams[1] != null ) { visualParams[1].set(tY.get()); }
         finished = true; // one-shot modifier
     }
 
@@ -29,9 +31,9 @@ public class SetTranslation extends AbstractMultiModifier
     @Override
     public String toString()
     {
-        return "SetTranslation(" + tX + ", " + tY + ")";
+        return "SetTranslation(" + tX.get() + ", " + tY.get() + ")";
     }
 
     
-    private final float tX, tY;
+    private final Parameter tX, tY;
 }

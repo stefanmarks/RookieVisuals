@@ -3,6 +3,7 @@ package modifier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import parameter.Parameter;
+import parameter.ParameterList;
 import visual.Visual;
 
 /**
@@ -14,8 +15,9 @@ public abstract class AbstractMultiModifier implements Modifier
 {
     public AbstractMultiModifier(String[] paramNames)
     {
-        this.parameterNames = paramNames;
-        this.finished   = false;
+        this.visualParamNames = paramNames;
+        this.modifierParams   = new ParameterList();
+        this.finished         = false;
     }
 
     
@@ -23,12 +25,12 @@ public abstract class AbstractMultiModifier implements Modifier
     public boolean setVisual(Visual v)
     {
         boolean foundAll = true;
-        parameters = new Parameter[parameterNames.length];
-        for ( int i = 0; i < parameterNames.length; i++ )
+        visualParams = new Parameter[visualParamNames.length];
+        for ( int i = 0; i < visualParamNames.length; i++ )
         {
-            String parameterName = parameterNames[i];
-            parameters[i] = v.getParameters().find(parameterName);
-            if ( parameters[i] == null )
+            String parameterName = visualParamNames[i];
+            visualParams[i] = v.getParameters().find(parameterName);
+            if ( visualParams[i] == null )
             {
                 LOG.log(Level.WARNING, 
                     "Could not find parameter ''{0}'' in visual ''{1}''.", 
@@ -48,9 +50,10 @@ public abstract class AbstractMultiModifier implements Modifier
     }
     
     
-    protected final String[] parameterNames;
-    protected Parameter[]    parameters;
-    protected boolean        finished;
+    protected final String[]      visualParamNames;
+    protected       Parameter[]   visualParams;
+    protected final ParameterList modifierParams;
+    protected boolean             finished;
     
     private final static Logger LOG = Logger.getLogger(AbstractMultiModifier.class.getName());
 }

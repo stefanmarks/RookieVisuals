@@ -1,5 +1,8 @@
 package modifier;
 
+import parameter.DefaultParameter;
+import parameter.ModuloParameter;
+import parameter.Parameter;
 import timing.TimeBase;
 
 /**
@@ -21,23 +24,20 @@ public class Oscillator extends AbstractSingleModifier
     public Oscillator(String paramName, float frequency, float phase, float bias, float amplitude)
     {
         super(paramName);
-        this.frequency = frequency;
-        this.angle     = phase;
-        this.bias      = bias;
-        this.amplitude = amplitude;
+        this.frequency = new DefaultParameter("frequency", frequency); modifierParams.add(this.frequency);
+        this.angle     = new ModuloParameter( "angle", phase, -360, 360); modifierParams.add(this.angle);
+        this.bias      = new DefaultParameter("bias", bias); modifierParams.add(this.bias);
+        this.amplitude = new DefaultParameter("amplitude", amplitude); modifierParams.add(this.amplitude);
     }
     
     
     @Override
     public void apply(TimeBase timeBase)
     {
-        angle += timeBase.frameTime * frequency * 360;
-        if ( angle > 360 ) { angle -= 360; }
-        if ( angle <   0 ) { angle += 360; }
-        parameter.set(bias + amplitude * (float) Math.sin(Math.toRadians(angle)));
+        angle.set(angle.get() + timeBase.frameTime * frequency.get() * 360);
+        visualParam.set(bias.get() + amplitude.get() * (float) Math.sin(Math.toRadians(angle.get())));
     }
 
     
-    private final float frequency, bias, amplitude;
-    private       float angle;
+    private final Parameter frequency, amplitude, angle, bias;
 }

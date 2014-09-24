@@ -23,6 +23,7 @@ import modifier.RandomGlitch;
 import modifier.SetTranslation;
 import modifier.SetScale;
 import processing.core.PApplet;
+import processing.data.JSONObject;
 import timing.TimeBase;
 import visual.SplitImage;
 import visual.Stripes;
@@ -71,7 +72,7 @@ public class RookieVisuals extends PApplet
         else
         {
             final int WINDOW_WIDTH  = 1200;
-            final int WINDOW_HEIGHT = WINDOW_WIDTH * 1 / 3; // 4:1 ratio
+            final int WINDOW_HEIGHT = WINDOW_WIDTH * 9 / 16; // 4:3 ratio
             size(WINDOW_WIDTH, WINDOW_HEIGHT, P3D);
         }
         
@@ -122,6 +123,9 @@ public class RookieVisuals extends PApplet
         s2.addModifier(new AudioSignal_FrequencyIntensity("stroke[4]", audioAnalyser, 20, 0.01f, 0.10f));
         visualManager.add(s2);
 
+        JSONObject o = new JSONObject();
+        s2.getParameters().writeJSON(o);
+        System.out.println(o);
     }
     
     /**
@@ -175,7 +179,7 @@ public class RookieVisuals extends PApplet
                     Visual s1 = visualManager.find("StripesL");
                     if ( s1 != null )
                     {
-                        //s1
+                        
                     }
                     break;
                 }
