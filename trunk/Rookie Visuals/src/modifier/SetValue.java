@@ -1,5 +1,7 @@
 package modifier;
 
+import parameter.DefaultParameter;
+import parameter.Parameter;
 import timing.TimeBase;
 
 /**
@@ -12,16 +14,16 @@ public class SetValue extends AbstractSingleModifier
     public SetValue(String paramName, float value)
     {
         super(paramName);
-        this.value = value;
+        this.value = new DefaultParameter("value", value); modifierParams.add(this.value);
     }
     
     
     @Override
     public void apply(TimeBase timeBase)
     {
-        parameter.set(value);
+        if ( visualParam != null ) { visualParam.set(value.get()); }
     }
 
     
-    private final float value;
+    private final Parameter value;
 }

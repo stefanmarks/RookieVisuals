@@ -1,5 +1,7 @@
 package modifier;
 
+import parameter.DefaultParameter;
+import parameter.Parameter;
 import timing.TimeBase;
 
 /**
@@ -12,16 +14,19 @@ public class ConstantChange extends AbstractSingleModifier
     public ConstantChange(String paramName, float change)
     {
         super(paramName);
-        this.change = change;
+        paramChange = new DefaultParameter("change", change); modifierParams.add(paramChange);
     }
     
     
     @Override
     public void apply(TimeBase timeBase)
     {
-        parameter.set(parameter.get() + change * timeBase.frameTime);
+        if ( visualParam != null )
+        {
+            visualParam.set(visualParam.get() + paramChange.get() * timeBase.frameTime);
+        }
     }
 
     
-    private final float change;
+    private final Parameter paramChange;
 }

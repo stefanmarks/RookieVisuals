@@ -1,5 +1,6 @@
 package modifier;
 
+import parameter.DefaultParameter;
 import timing.TimeBase;
 
 /**
@@ -18,16 +19,16 @@ public class SetScale extends AbstractMultiModifier
     public SetScale(float x, float y)
     {
         super(new String[] { "sX", "sY" });
-        this.sX = x;
-        this.sY = y;
+        sX = new DefaultParameter("sX", x); modifierParams.add(sX);
+        sY = new DefaultParameter("sY", y); modifierParams.add(sY);
     }
 
     
     @Override
     public void apply(TimeBase timeBase)
     {
-        parameters[0].set(sX);
-        parameters[1].set(sY);
+        if ( visualParams[0] != null ) { visualParams[0].set(sX.get()); }
+        if ( visualParams[1] != null ) { visualParams[1].set(sY.get()); }
         finished = true; // one-shot
     }
 
@@ -35,9 +36,9 @@ public class SetScale extends AbstractMultiModifier
     @Override
     public String toString()
     {
-        return "SetScale(" + sX + ", " + sY + ")";
+        return "SetScale(" + sX.get() + ", " + sY.get() + ")";
     }
 
     
-    private final float sX, sY;
+    private final DefaultParameter sX, sY;
 }
