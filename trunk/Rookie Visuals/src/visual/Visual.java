@@ -48,6 +48,24 @@ public interface Visual
 
     
     /**
+     * Checks if the visual is enabled.
+     * 
+     * @return <code>true</code> if it is enabled,
+     *         <code>false</code> if not
+     */
+    public boolean isEnabled();
+    
+    
+    /**
+     * Enables or disables the visual.
+     * 
+     * @param enabled <code>true</code> to enable the visual,
+     *                <code>false</code> to disable it
+     */
+    public void setEnabled(boolean enabled);
+    
+
+    /**
      * Renders the visual.
      * 
      * @param g the graphics context to render to

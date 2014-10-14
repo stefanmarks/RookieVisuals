@@ -1,6 +1,5 @@
 package visual;
 
-import static java.awt.Frame.NORMAL;
 import parameter.DefaultParameter;
 import parameter.Parameter;
 import processing.core.PApplet;
@@ -28,8 +27,11 @@ public class SplitImage extends AbstractVisual
     @Override
     public void render(PGraphics g)
     {
+        if ( !isEnabled() ) return;
+        
         preRender(g);
-        g.textureMode(NORMAL);
+        g.blendMode(PApplet.BLEND);
+        g.textureMode(PApplet.NORMAL);
         // move into abtract base class as fixed parameter: g.blendMode(PApplet.EXCLUSION);
 
         g.noStroke();

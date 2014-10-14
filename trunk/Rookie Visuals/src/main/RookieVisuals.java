@@ -20,10 +20,13 @@ import javax.swing.JTextArea;
 import modifier.ConstantChange;
 import modifier.AudioSignal_FrequencyIntensity;
 import modifier.RandomGlitch;
+import modifier.SetRotation;
 import modifier.SetTranslation;
 import modifier.SetScale;
+import modifier.TimedChange;
 import processing.core.PApplet;
-import processing.data.JSONObject;
+import processing.core.PFont;
+import processing.core.PGraphics;
 import timing.TimeBase;
 import visual.SplitImage;
 import visual.Stripes;
@@ -42,6 +45,7 @@ public class RookieVisuals extends PApplet
     public static final String VERSION = "1.0";
     
     public static final String CONFIG_FILE = "./config.txt";
+    public static final String NAME_FILE   = "./names.txt";
     
     
     /**
@@ -91,8 +95,29 @@ public class RookieVisuals extends PApplet
         // attach input to audio analyser
         audioAnalyser.attachToAudio(minim.getLineIn());
         
+        loadNames();
         setupVisuals();
         setupOSC();
+    }
+
+    
+    /**
+     * Loads and prepares the name strings
+     */
+    private void loadNames()
+    {
+        final String spaces = "                                              ";
+        
+        names = loadStrings(NAME_FILE);
+        
+        for (int i = 0; i < names.length; i++)
+        {
+            String name = names[i].trim();
+            name     = name.replaceFirst(" ", "\n");
+            names[i] = name + spaces.substring(0, name.indexOf('\n') * 4);
+        }
+        
+        nameIdx = 0;
     }
     
     
@@ -101,31 +126,42 @@ public class RookieVisuals extends PApplet
      */
     private void setupVisuals()
     {
-        Visual v = new SplitImage("RookieLogo", loadImage("rookie_logo_black.png"));
-        v.addModifier(new SetScale(0.25f)); 
-        v.addModifier(new RandomGlitch("split", 0.01f, -0.1f, 0.1f));
-        //v.addModifier(new Oscillator("angle", 0.01f, 0, 0, 10));
-        visualManager.add(v);
+        visLogo = new SplitImage("RookieLogo", loadImage("rookie_logo_black.png"));
+        visLogo.addModifier(new SetScale(0.5f)); 
+        visLogo.addModifier(new RandomGlitch("split", 0.01f, -0.1f, 0.1f));
+        visualManager.add(visLogo);
 
-        Stripes s1 = new Stripes("StripesL", 1, 2.0f, 1.0f, -0.1f, 0.1f, 0.01f);
-        s1.addModifier(new SetTranslation(-1.5f, -0.5f)); 
-        s1.addModifier(new ConstantChange("offset", 0.5f));
-        s1.addModifier(new AudioSignal_FrequencyIntensity("stroke[0]", audioAnalyser, 3, 0.01f, 0.05f)); // react to low frequencies
-        visualManager.add(s1);
+        visName = getNameVisual("");
+        visualManager.add(visName);
+
+        PGraphics i2 = createGraphics(100, 100);
+        i2.fill(color(255));
+        i2.rect(0, 0, 100, 100);
+        Visual v = new SplitImage("Blind", i2);
+        v.addModifier(new ConstantChange("tY", -0.2f));
+        //visualManager.add(v);
+
+        visCurtain1 = new Stripes("StripesL", 5, 2.0f, 1.0f, -0.1f, 0.1f, 0.01f);
+        visCurtain1.addModifier(new SetTranslation(-1.5f, -0.5f)); 
+        visCurtain1.addModifier(new ConstantChange("offset", 0.5f));
+        visCurtain1.addModifier(new AudioSignal_FrequencyIntensity("stroke[0]", audioAnalyser,  2, 0.01f, 0.1f)); // react to low frequencies
+        visCurtain1.addModifier(new AudioSignal_FrequencyIntensity("stroke[1]", audioAnalyser,  5, 0.01f, 0.2f));
+        visCurtain1.addModifier(new AudioSignal_FrequencyIntensity("stroke[2]", audioAnalyser,  8, 0.01f, 0.3f));
+        visCurtain1.addModifier(new AudioSignal_FrequencyIntensity("stroke[3]", audioAnalyser, 12, 0.01f, 0.2f));
+        visCurtain1.addModifier(new AudioSignal_FrequencyIntensity("stroke[4]", audioAnalyser, 17, 0.01f, 0.3f));
+        visualManager.add(visCurtain1);
         
-        Stripes s2 = new Stripes("StripesR", 5, 2.0f, 1.0f, -0.1f, 0.1f, 0.01f);
-        s2.addModifier(new SetTranslation(0.5f, -0.5f)); 
-        s2.addModifier(new ConstantChange("offset", -0.5f));
-        s2.addModifier(new AudioSignal_FrequencyIntensity("stroke[0]", audioAnalyser,  3, 0.01f, 0.01f)); // react to high frequencies
-        s2.addModifier(new AudioSignal_FrequencyIntensity("stroke[1]", audioAnalyser,  7, 0.01f, 0.02f));
-        s2.addModifier(new AudioSignal_FrequencyIntensity("stroke[2]", audioAnalyser, 10, 0.01f, 0.05f));
-        s2.addModifier(new AudioSignal_FrequencyIntensity("stroke[3]", audioAnalyser, 15, 0.01f, 0.07f));
-        s2.addModifier(new AudioSignal_FrequencyIntensity("stroke[4]", audioAnalyser, 20, 0.01f, 0.10f));
-        visualManager.add(s2);
-
-        JSONObject o = new JSONObject();
-        s2.getParameters().writeJSON(o);
-        System.out.println(o);
+        visCurtain2 = new Stripes("StripesR", 5, 2.0f, 1.0f, -0.1f, 0.1f, 0.01f);
+        visCurtain2.addModifier(new SetTranslation(0.5f, -0.5f)); 
+        visCurtain2.addModifier(new ConstantChange("offset", -0.5f));
+        visCurtain2.addModifier(new AudioSignal_FrequencyIntensity("stroke[0]", audioAnalyser,  3, 0.01f, 0.1f)); // react to high frequencies
+        visCurtain2.addModifier(new AudioSignal_FrequencyIntensity("stroke[1]", audioAnalyser,  7, 0.01f, 0.2f));
+        visCurtain2.addModifier(new AudioSignal_FrequencyIntensity("stroke[2]", audioAnalyser, 10, 0.01f, 0.3f));
+        visCurtain2.addModifier(new AudioSignal_FrequencyIntensity("stroke[3]", audioAnalyser, 15, 0.01f, 0.4f));
+        visCurtain2.addModifier(new AudioSignal_FrequencyIntensity("stroke[4]", audioAnalyser, 20, 0.01f, 0.3f));
+        visualManager.add(visCurtain2);
+        
+        curtainOpen = false;
     }
     
     /**
@@ -147,6 +183,24 @@ public class RookieVisuals extends PApplet
     }
     
     
+    private Visual getNameVisual(String name)
+    {
+        PGraphics i = createGraphics(1000, 400);
+        PFont     f = createFont("TheFont.otf", 1, true);
+        i.textFont(f);
+        i.textSize(65);
+        i.textAlign(RIGHT);
+        i.textLeading(45);
+        i.fill(color(0));
+        i.text(name.toUpperCase(), 990, 220);
+        Visual v = new SplitImage("Name", i);
+        v.addModifier(new SetTranslation(-0.035f, 0)); 
+        v.addModifier(new SetScale(0.25f)); 
+        v.addModifier(new SetRotation(-45));
+        v.addModifier(new RandomGlitch("tX", 0.02f, -0.2f, 0.1f));
+        return v;
+    }
+    
     /**
      * Draws a single frame.
      */
@@ -156,7 +210,11 @@ public class RookieVisuals extends PApplet
         timeBase.tick();
         visualManager.update(timeBase);
         
-        background(255);
+        background(color(255));
+        
+                //fill(color(255, 20));
+        //rect(0, 0, width, height);
+        
         translate(width / 2, height / 2); // screen centre is 0/0
         scale(height);                    // Screen height rangs from -0.5 to 0.5
         visualManager.render(this.g);
@@ -174,13 +232,40 @@ public class RookieVisuals extends PApplet
             // plain keypress
             switch ( key )
             {
+                case ' ' : // next name
+                {
+                    if ( nameIdx < names.length - 1 )
+                    {
+                        nameIdx++;
+                        Visual vNew = getNameVisual(names[nameIdx]);
+                        visualManager.replace(visName, vNew);
+                        visName = vNew;
+                        visLogo.setEnabled(false);
+                    }
+                    break;
+                }
+                
+                case 'n' : // enable/disable name
+                {
+                    visLogo.setEnabled(false);
+                    visName.setEnabled(!visName.isEnabled());
+                    break;
+                }
+                
+                case 'l' :
+                {
+                    visLogo.setEnabled(!visLogo.isEnabled());
+                    visName.setEnabled(false);
+                    break;
+                }
+                
                 case 't' :
                 {
-                    Visual s1 = visualManager.find("StripesL");
-                    if ( s1 != null )
-                    {
-                        
-                    }
+                    float dX = curtainOpen ? -0.1f : 0.1f;
+                    visCurtain1.addModifier(new TimedChange("tX", -dX, 1));
+                    visCurtain2.addModifier(new TimedChange("tX",  dX, 1));
+                    visLogo.addModifier(new TimedChange("split", 20 * dX, 1));
+                    curtainOpen = !curtainOpen;
                     break;
                 }
             }
@@ -230,7 +315,7 @@ public class RookieVisuals extends PApplet
      * @param args command line arguments
      */
     public static void main(String[] args)
-    {        
+    {
         // Prepare a better logging output
         // get toplevel logger
         Logger logger = Logger.getLogger("");
@@ -323,5 +408,11 @@ public class RookieVisuals extends PApplet
     // Visuals
     private final TimeBase      timeBase;
     private final VisualManager visualManager;
+    
+    private Visual   visLogo, visName, visCurtain1, visCurtain2;
+    private boolean  curtainOpen;
+    
+    private String[] names;
+    private int      nameIdx;
 } 
 
