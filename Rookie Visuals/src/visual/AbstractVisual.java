@@ -36,6 +36,8 @@ public abstract class AbstractVisual implements Visual
         paramAngle  = new DefaultParameter("angle", 0); parameters.add(paramAngle);
         paramScaleX = new DefaultParameter("sX", 1);    parameters.add(paramScaleX);
         paramScaleY = new DefaultParameter("sY", 1);    parameters.add(paramScaleY);
+        
+        paramEnabled = new DefaultParameter("enabled", 1); parameters.add(paramEnabled);
     }
 
     
@@ -99,6 +101,20 @@ public abstract class AbstractVisual implements Visual
         }
     }
     
+    
+    @Override
+    public boolean isEnabled()
+    {
+        return paramEnabled.get() > 0;
+    }
+    
+
+    @Override
+    public void setEnabled(boolean enabled)
+    {
+        paramEnabled.set(enabled ? 1 : 0);
+    }
+    
 
     /**
      * Applies transformations before actually rendering the visual
@@ -116,6 +132,7 @@ public abstract class AbstractVisual implements Visual
     protected final String    name;
     protected List<Modifier>  modifiers;
     protected ParameterList   parameters;
+    protected Parameter       paramEnabled;
     protected Parameter       paramPosX, paramPosY;
     protected Parameter       paramAngle;
     protected Parameter       paramScaleX, paramScaleY;

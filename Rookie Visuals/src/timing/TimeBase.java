@@ -17,11 +17,11 @@ public class TimeBase
     public void tick()
     {
         // turn nanosecond
-        absTime = System.currentTimeMillis()/ 1000.0f;
+        absTime = System.currentTimeMillis()/ 1000.0;
     }
     
     
-    public final int   frameRate;
-    public final float frameTime;
-    public       float absTime;
+    public final int    frameRate;
+    public final float  frameTime;
+    public       double absTime;
 }

@@ -26,12 +26,13 @@ public class AudioSignal_FrequencyIntensity extends AbstractSingleModifier
     {
         final float intensity = analyser.getSpectrumInfo(0).intensity[spectrumIdx];
         runningMax = Math.max(runningMax, intensity);
-        visualParam.set(min + (max - min) * (intensity / runningMax));
+        value = Math.max(value * (1.0f - timeBase.frameTime * 5), intensity / runningMax);
+        visualParam.set(min + (max - min) * value);
     }
 
     
     private final SpectrumAnalyser analyser;
     private final float            min, max;
     private final int              spectrumIdx;
-    private       float            runningMax;
+    private       float            value, runningMax;
 }

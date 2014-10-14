@@ -46,6 +46,8 @@ public class Stripes extends AbstractVisual
     @Override
     public void render(PGraphics g)
     {
+        if ( !isEnabled() ) return;
+        
         preRender(g);
         g.noStroke();
         g.fill(255);

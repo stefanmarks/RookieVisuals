@@ -37,6 +37,28 @@ public class VisualManager
     
     
     /**
+     * Replaces a visual.
+     *
+     * @param oldVis  the visual to replace
+     * @param newVis  the visual to replace it with
+     * 
+     * @return <code>true</code> if the visual was replaced,
+     *         <code>false</code> if not
+     */
+    public boolean replace(Visual oldVis, Visual newVis)
+    {
+        boolean success = false;
+        int idx = visuals.indexOf(oldVis);
+        if ( idx >= 0 )
+        {
+            visuals.set(idx, newVis);
+            success = true;
+        }
+        return success;
+    }
+    
+    
+    /**
      * Removes a visual from the manager.
      * 
      * @param v the visual to remove
