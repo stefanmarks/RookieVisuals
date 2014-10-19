@@ -3,6 +3,8 @@ package main;
 import analyser.AudioInput;
 import analyser.AudioManager;
 import analyser.SpectrumAnalyser;
+import com.illposed.osc.OSCParameter;
+import com.illposed.osc.OSCParameterListener;
 import com.illposed.osc.OSCPort;
 import com.illposed.osc.OSCPortIn;
 import ddf.minim.Minim;
@@ -58,8 +60,9 @@ public class RookieVisuals extends PApplet
     {
         this.runInFullscreen = fullscreen;
         
-        timeBase = new TimeBase(60);
+        timeBase      = new TimeBase(60);
         visualManager = new VisualManager();
+        vars          = new RookieVisualsVariables();
     }
     
          
@@ -98,6 +101,10 @@ public class RookieVisuals extends PApplet
         loadNames();
         setupVisuals();
         setupOSC();
+        
+        vars.currentName.registerListener(new NameChangeListener());
+        vars.curtainOpen.registerListener(new CurtainChangeListener());
+        vars.logoVisible.registerListener(new LogoChangeListener());
     }
 
     
@@ -106,17 +113,7 @@ public class RookieVisuals extends PApplet
      */
     private void loadNames()
     {
-        final String spaces = "                                              ";
-        
         names = loadStrings(NAME_FILE);
-        
-        for (int i = 0; i < names.length; i++)
-        {
-            String name = names[i].trim();
-            name     = name.replaceFirst(" ", "\n");
-            names[i] = name + spaces.substring(0, name.indexOf('\n') * 4);
-        }
-        
         nameIdx = 0;
     }
     
@@ -129,9 +126,10 @@ public class RookieVisuals extends PApplet
         visLogo = new SplitImage("RookieLogo", loadImage("rookie_logo_black.png"));
         visLogo.addModifier(new SetScale(0.5f)); 
         visLogo.addModifier(new RandomGlitch("split", 0.01f, -0.1f, 0.1f));
+        visLogo.setEnabled(vars.logoVisible.get());
         visualManager.add(visLogo);
 
-        visName = getNameVisual("");
+        visName = getNameVisual(vars.currentName.get());
         visualManager.add(visName);
 
         PGraphics i2 = createGraphics(100, 100);
@@ -174,6 +172,8 @@ public class RookieVisuals extends PApplet
             // open port
             oscReceiver = new OSCPortIn(OSCPort.defaultSCOSCPort());
             // register listener (reacts to every incoming message)
+            vars.registerWithInputPort(oscReceiver);
+            // and ready to receive
             oscReceiver.startListening();
         }
         catch (SocketException e)
@@ -185,6 +185,18 @@ public class RookieVisuals extends PApplet
     
     private Visual getNameVisual(String name)
     {
+        if ( !name.isEmpty() )
+        {
+            // break and align name
+            final String spaces = "                                              ";
+            name = name.trim().replaceFirst(" ", "\n");
+            int breakIdx = name.indexOf('\n');
+            if ( breakIdx > 0 )
+            {
+                name = name + spaces.substring(0, breakIdx * 4);
+            }
+        }
+        
         PGraphics i = createGraphics(1000, 400);
         PFont     f = createFont("TheFont.otf", 1, true);
         i.textFont(f);
@@ -201,6 +213,7 @@ public class RookieVisuals extends PApplet
         return v;
     }
     
+    
     /**
      * Draws a single frame.
      */
@@ -211,9 +224,6 @@ public class RookieVisuals extends PApplet
         visualManager.update(timeBase);
         
         background(color(255));
-        
-                //fill(color(255, 20));
-        //rect(0, 0, width, height);
         
         translate(width / 2, height / 2); // screen centre is 0/0
         scale(height);                    // Screen height rangs from -0.5 to 0.5
@@ -237,35 +247,28 @@ public class RookieVisuals extends PApplet
                     if ( nameIdx < names.length - 1 )
                     {
                         nameIdx++;
-                        Visual vNew = getNameVisual(names[nameIdx]);
-                        visualManager.replace(visName, vNew);
-                        visName = vNew;
-                        visLogo.setEnabled(false);
+                        vars.currentName.set(names[nameIdx]);
                     }
                     break;
                 }
                 
                 case 'n' : // enable/disable name
                 {
-                    visLogo.setEnabled(false);
-                    visName.setEnabled(!visName.isEnabled());
+                    vars.logoVisible.set(false);
+                    vars.currentName.set(vars.currentName.get().isEmpty() ? names[nameIdx] : "");
                     break;
                 }
                 
                 case 'l' :
                 {
-                    visLogo.setEnabled(!visLogo.isEnabled());
-                    visName.setEnabled(false);
+                    vars.logoVisible.set(!vars.logoVisible.get());
+                    vars.currentName.set("");
                     break;
                 }
                 
-                case 't' :
+                case 'c' :
                 {
-                    float dX = curtainOpen ? -0.1f : 0.1f;
-                    visCurtain1.addModifier(new TimedChange("tX", -dX, 1));
-                    visCurtain2.addModifier(new TimedChange("tX",  dX, 1));
-                    visLogo.addModifier(new TimedChange("split", 20 * dX, 1));
-                    curtainOpen = !curtainOpen;
+                    vars.curtainOpen.set(!vars.curtainOpen.get());
                     break;
                 }
             }
@@ -397,8 +400,68 @@ public class RookieVisuals extends PApplet
     }
     
     
+    /**
+     * Listener for changes in the current name.
+     */
+    private class NameChangeListener implements OSCParameterListener<String>
+    {
+        @Override
+        public void valueChanged(OSCParameter<String> param)
+        {
+            if ( param.get().isEmpty() )
+            {
+                visName.setEnabled(false);
+            }
+            else
+            {
+                Visual vNew = getNameVisual(param.get());
+                visualManager.replace(visName, vNew);
+                visName = vNew;
+                vars.logoVisible.set(false);
+            }
+        }
+    }
+    
+    
+    /**
+     * Listener for changes in the curtain opening.
+     */
+    private class CurtainChangeListener implements OSCParameterListener<Boolean>
+    {
+        @Override
+        public void valueChanged(OSCParameter<Boolean> param)
+        {
+            if ( param.get() != curtainOpen )
+            {
+                float dX = param.get() ? 0.1f : -0.1f;
+                visCurtain1.addModifier(new TimedChange("tX", -dX, 1));
+                visCurtain2.addModifier(new TimedChange("tX",  dX, 1));
+                curtainOpen = param.get();
+            }
+        }
+    }
+    
+    
+    /**
+     * Listener for changes in the curtain opening.
+     */
+    private class LogoChangeListener implements OSCParameterListener<Boolean>
+    {
+        @Override
+        public void valueChanged(OSCParameter<Boolean> param)
+        {
+            if ( param.get() != visLogo.isEnabled() )
+            {
+                visLogo.setEnabled(param.get());
+            }
+        }
+    }
+
+    
     private final boolean  runInFullscreen;
-    private OSCPortIn      oscReceiver;
+    
+    private final RookieVisualsVariables vars;
+    private       OSCPortIn              oscReceiver;
     
     // live audio input
     private AudioManager      audioManager;

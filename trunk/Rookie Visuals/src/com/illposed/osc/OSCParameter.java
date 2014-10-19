@@ -65,7 +65,7 @@ public class OSCParameter<Type> implements OSCListener
     
     public String valueToString()
     {
-        String output = value.toString();
+        String output;
         if ( value instanceof PVector )
         {
             PVector v = (PVector) value;
@@ -78,6 +78,10 @@ public class OSCParameter<Type> implements OSCListener
         else if ( value instanceof Integer )
         {
            output = ((Integer) value).toString();
+        }
+        else
+        {
+            output = value.toString();
         }
         return output;
     }
@@ -114,6 +118,10 @@ public class OSCParameter<Type> implements OSCListener
         else if ( value instanceof Boolean )
         {
             value = (Type) ((Boolean) Boolean.parseBoolean(in));
+        }
+        else if ( value instanceof String )
+        {
+            value = (Type) in;
         }
         else
         {
@@ -153,7 +161,7 @@ public class OSCParameter<Type> implements OSCListener
     @Override
     public void acceptMessage(Date time, OSCMessage message)
     {
-        Object[] params   = message.getArguments();
+        Object[] params = message.getArguments();
         if ( (value instanceof PVector) && (params.length > 2) )
         {
             ((PVector) value).set((Float) params[0], 
