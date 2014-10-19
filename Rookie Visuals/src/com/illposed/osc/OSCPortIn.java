@@ -44,9 +44,9 @@ public class OSCPortIn extends OSCPort implements Runnable {
 
 	// state for listening
 	private boolean listening;
-	private OSCByteArrayToJavaConverter converter
+	private final OSCByteArrayToJavaConverter converter
 			= new OSCByteArrayToJavaConverter();
-	private OSCPacketDispatcher dispatcher = new OSCPacketDispatcher();
+	private final OSCPacketDispatcher dispatcher = new OSCPacketDispatcher();
 
 	/**
 	 * Create an OSCPort that listens on the specified port.
@@ -68,6 +68,7 @@ public class OSCPortIn extends OSCPort implements Runnable {
 	 * {@link #isListening()} becomes false.
 	 * @see java.lang.Runnable#run()
 	 */
+        @Override
 	public void run() {
 		byte[] buffer = new byte[BUFFER_SIZE];
 		DatagramPacket packet = new DatagramPacket(buffer, BUFFER_SIZE);
@@ -112,6 +113,8 @@ public class OSCPortIn extends OSCPort implements Runnable {
 
 	/**
 	 * Am I listening for packets?
+         * @return <code>true</code> if listening,
+         * <code>false</code> if not
 	 */
 	public boolean isListening() {
 		return listening;
