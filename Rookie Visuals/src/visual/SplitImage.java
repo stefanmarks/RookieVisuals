@@ -14,11 +14,12 @@ import processing.core.PImage;
  */
 public class SplitImage extends AbstractVisual
 {
-    public SplitImage(String name, PImage image)
+    public SplitImage(String name, PImage image, int splitAngle)
     {
         super(name);
-        this.image  = image;
-        this.aspect = (float) this.image.width / (float) this.image.height; 
+        this.image      = image;
+        this.aspect     = (float) this.image.width / (float) this.image.height; 
+        this.splitAngle = splitAngle;
         
         splitSize = new DefaultParameter("split", 0); parameters.add(splitSize);
     }  
@@ -39,13 +40,26 @@ public class SplitImage extends AbstractVisual
         final float dY =          splitSize.get();
         g.beginShape(TRIANGLES);
             g.texture(image);
-            g.vertex(-aspect-dX, -1+dY, 0, 0, 0);
-            g.vertex( aspect-dX, -1+dY, 0, 1, 0);
-            g.vertex(-aspect-dX,  1+dY, 0, 0, 1);
+            if ( splitAngle < 0 )
+            {
+                g.vertex(-aspect-dX, -1-dY, 0, 0, 0);
+                g.vertex( aspect-dX, -1-dY, 0, 1, 0);
+                g.vertex( aspect-dX,  1-dY, 0, 1, 1);
 
-            g.vertex( aspect+dX, -1-dY, 0, 1, 0);
-            g.vertex( aspect+dX,  1-dY, 0, 1, 1);
-            g.vertex(-aspect+dX,  1-dY, 0, 0, 1);
+                g.vertex(-aspect+dX, -1+dY, 0, 0, 0);
+                g.vertex( aspect+dX,  1+dY, 0, 1, 1);
+                g.vertex(-aspect+dX,  1+dY, 0, 0, 1);
+            }
+            else
+            {
+                g.vertex(-aspect-dX, -1+dY, 0, 0, 0);
+                g.vertex( aspect-dX, -1+dY, 0, 1, 0);
+                g.vertex(-aspect-dX,  1+dY, 0, 0, 1);
+
+                g.vertex( aspect+dX, -1-dY, 0, 1, 0);
+                g.vertex( aspect+dX,  1-dY, 0, 1, 1);
+                g.vertex(-aspect+dX,  1-dY, 0, 0, 1);
+            }
         g.endShape();
         g.blendMode(PApplet.BLEND);
     }
@@ -53,6 +67,7 @@ public class SplitImage extends AbstractVisual
   
     private final PImage    image;
     private final float     aspect; 
+    private final int       splitAngle;
     
     private final Parameter splitSize; 
 }

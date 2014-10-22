@@ -1,19 +1,29 @@
 package main;
 
+import analyser.AudioInput;
+import analyser.AudioManager;
+import analyser.SpectrumAnalyser;
 import com.illposed.osc.OSCPacket;
+import com.illposed.osc.OSCParameter;
 import com.illposed.osc.OSCPortOut;
+import ddf.minim.Minim;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.DefaultListModel;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import javax.swing.JSlider;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 /**
  * Dialog for remote control of SoundBite slaves.
@@ -26,7 +36,7 @@ public class RookieVisualsRemoteController extends javax.swing.JFrame
     /**
      * Creates a new SoundBite controller.
      */
-    public RookieVisualsRemoteController()
+    public RookieVisualsRemoteController(AudioInput input)
     {
         clients = new DefaultListModel<>();
         vars    = new RookieVisualsVariables();
@@ -37,6 +47,19 @@ public class RookieVisualsRemoteController extends javax.swing.JFrame
         loadNameList();
         
         initComponents();
+        
+        // initialise Audio
+        minim = new Minim(null);
+        minim.setInputMixer(input.getMixer());
+        
+        // create audio analyser
+        audioAnalyser = new SpectrumAnalyser(30, 20, 2, 1);
+        // attach input to audio analyser
+        audioAnalyser.attachToAudio(minim.getLineIn());
+        
+        initSpectrumSliders();
+        
+        audioAnalyser.registerListener(new SpectrumListener());
     }
 
     
@@ -71,6 +94,7 @@ public class RookieVisualsRemoteController extends javax.swing.JFrame
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents()
     {
+        java.awt.GridBagConstraints gridBagConstraints;
 
         javax.swing.JPanel pnlContent = new javax.swing.JPanel();
         javax.swing.JPanel pnlClients = new javax.swing.JPanel();
@@ -92,6 +116,13 @@ public class RookieVisualsRemoteController extends javax.swing.JFrame
         pnlNameButtons = new javax.swing.JPanel();
         btnSendName = new javax.swing.JButton();
         btnHideName = new javax.swing.JButton();
+        javax.swing.JPanel pnlAudio = new javax.swing.JPanel();
+        pnlFrequencies = new javax.swing.JPanel();
+        javax.swing.JPanel pnlAudioControls = new javax.swing.JPanel();
+        javax.swing.JLabel lblVolume = new javax.swing.JLabel();
+        sldVolume = new javax.swing.JSlider();
+        javax.swing.JLabel lblDecay = new javax.swing.JLabel();
+        sldDecay = new javax.swing.JSlider();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("SoundBite Remote Controller");
@@ -226,12 +257,77 @@ public class RookieVisualsRemoteController extends javax.swing.JFrame
 
         pnlContent.add(pnlButtons);
 
+        pnlAudio.setLayout(new java.awt.BorderLayout());
+
+        pnlFrequencies.setBorder(javax.swing.BorderFactory.createCompoundBorder(javax.swing.BorderFactory.createTitledBorder("Frequency Spectrum"), javax.swing.BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+        pnlFrequencies.setLayout(new java.awt.GridLayout(1, 0));
+        pnlAudio.add(pnlFrequencies, java.awt.BorderLayout.CENTER);
+
+        pnlAudioControls.setLayout(new java.awt.GridBagLayout());
+
+        lblVolume.setLabelFor(sldVolume);
+        lblVolume.setText("Volume:");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.LINE_START;
+        gridBagConstraints.insets = new java.awt.Insets(0, 0, 0, 6);
+        pnlAudioControls.add(lblVolume, gridBagConstraints);
+
+        sldVolume.setMajorTickSpacing(50);
+        sldVolume.setMinorTickSpacing(5);
+        sldVolume.setPaintLabels(true);
+        sldVolume.setPaintTicks(true);
+        sldVolume.setToolTipText("");
+        sldVolume.setValue(100);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        pnlAudioControls.add(sldVolume, gridBagConstraints);
+
+        lblDecay.setLabelFor(sldDecay);
+        lblDecay.setText("Decay Time:");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.LINE_START;
+        gridBagConstraints.insets = new java.awt.Insets(5, 0, 0, 6);
+        pnlAudioControls.add(lblDecay, gridBagConstraints);
+
+        sldDecay.setMajorTickSpacing(50);
+        sldDecay.setMaximum(99);
+        sldDecay.setMinimum(75);
+        sldDecay.setMinorTickSpacing(5);
+        sldDecay.setToolTipText("");
+        sldDecay.setValue(99);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(6, 0, 0, 0);
+        pnlAudioControls.add(sldDecay, gridBagConstraints);
+
+        pnlAudio.add(pnlAudioControls, java.awt.BorderLayout.PAGE_END);
+
+        pnlContent.add(pnlAudio);
+
         getContentPane().add(pnlContent, java.awt.BorderLayout.CENTER);
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-        
+       
+    private void initSpectrumSliders()
+    {
+        sldSpectrum = new JSlider[vars.spectrum.length];
+        for ( int i = 0 ; i < sldSpectrum.length ; i++ )
+        {
+            JSlider sld = new JSlider();
+            sld.setOrientation(javax.swing.JSlider.VERTICAL);
+            sldSpectrum[i] = sld;
+            sld.addChangeListener(new SliderListener(vars.spectrum[i]));
+            pnlFrequencies.add(sld);
+        }
+    }
        
     
     /**
@@ -344,6 +440,7 @@ public class RookieVisualsRemoteController extends javax.swing.JFrame
         sendUpdate();
     }//GEN-LAST:event_btnHideNameActionPerformed
 
+    
     private void lstNamesMouseClicked(java.awt.event.MouseEvent evt)//GEN-FIRST:event_lstNamesMouseClicked
     {//GEN-HEADEREND:event_lstNamesMouseClicked
         if ( evt.getClickCount() > 1 )
@@ -385,17 +482,36 @@ public class RookieVisualsRemoteController extends javax.swing.JFrame
      */
     public static void main(String args[])
     {
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable()
+        AudioManager audioManager = new AudioManager();
+        List<AudioInput> inputs = audioManager.getInputs();
+        String[] inputNames = new String[inputs.size()];
+        for ( int i = 0 ; i < inputNames.length ; i++ )
         {
-            @Override
-            public void run()
-            {
-                JFrame app = new RookieVisualsRemoteController();
-                app.setLocationRelativeTo(null);
-                app.setVisible(true);
+            inputNames[i] = inputs.get(i).toString();
+        }
+        JComboBox<String> cbxAudioInput = new JComboBox<>(inputNames);
+        int choice = JOptionPane.showConfirmDialog(null, 
+                cbxAudioInput,
+                "Select an Audio Input",
+                JOptionPane.OK_CANCEL_OPTION);
+        if ( choice == JOptionPane.OK_OPTION )
+        {
+            AudioInput input = inputs.get(cbxAudioInput.getSelectedIndex());
+            JFrame app = new RookieVisualsRemoteController(input);
+            app.setLocationRelativeTo(null);
+            app.setVisible(true);
+            while ( app.isVisible() ) 
+            { 
+                try
+                {
+                    Thread.sleep(1000);
+                } 
+                catch (InterruptedException ex)
+                {
+                    // ignore
+                }
             }
-        });
+        }
     }
 
     
@@ -408,16 +524,23 @@ public class RookieVisualsRemoteController extends javax.swing.JFrame
     private javax.swing.JButton btnSendName;
     private javax.swing.JList lstClients;
     private javax.swing.JList lstNames;
+    private javax.swing.JPanel pnlFrequencies;
     private javax.swing.JPanel pnlNameButtons;
     private javax.swing.JPanel pnlNameList;
     private javax.swing.JPanel pnlSlaveButtons;
     private javax.swing.JScrollPane scrlNames;
+    private javax.swing.JSlider sldDecay;
+    private javax.swing.JSlider sldVolume;
     // End of variables declaration//GEN-END:variables
 
     private final DefaultListModel<RookieVisualClient>  clients;
     private final RookieVisualsVariables                vars;
     private final DefaultListModel                      nameListModel;
 
+    // live audio input
+    private final Minim             minim;
+    private final SpectrumAnalyser  audioAnalyser;
+    private       JSlider[]         sldSpectrum;
     
     /**
      * Class for encapsulating Rookie Visual Clients, 
@@ -470,4 +593,84 @@ public class RookieVisualsRemoteController extends javax.swing.JFrame
         private InetAddress address;
         private OSCPortOut  port;
     }
+    
+    
+    private class SliderListener implements ChangeListener
+    {
+        public SliderListener(OSCParameter<Float> parameter)
+        {
+            this.parameter = parameter;
+        }
+        
+        @Override
+        public void stateChanged(ChangeEvent e)
+        {
+            JSlider sld = (JSlider) e.getSource();
+            parameter.set(sld.getValue() / 100.0f);
+        }
+        
+        private final OSCParameter<Float> parameter;
+    }
+    
+    
+    private class SpectrumListener implements SpectrumAnalyser.Listener
+    {
+        public SpectrumListener()
+        {
+            final int n = vars.spectrum.length;
+            lastValue = new float[n];
+            sum       = new float[n];
+            max       = new float[n]; 
+            count     = new int[n];
+            // initialise
+            for (int i = 0; i < n; i++)
+            {
+                lastValue[i] = 0;
+                max[i]       = 1;                
+            }
+        }
+        
+        
+        @Override
+        public void analysisUpdated(SpectrumAnalyser analyser)
+        {
+            int varCount  = sldSpectrum.length;
+            int specCount = audioAnalyser.getSpectrumBandCount();
+            
+            // reset
+            for ( int i = 0; i < sum.length; i++ )
+            {
+                sum[i]   = 0;
+                max[i]  *= 0.999f;
+                count[i] = 0;
+            }
+            
+            // accumulate
+            for ( int i = 0 ; i < specCount ; i++ )
+            {
+                int idx = i * varCount / specCount;
+                sum[idx] += audioAnalyser.getSpectrumInfo(0).intensity[i];
+                count[idx]++;
+            }
+                
+            // save to OSC vars
+            for ( int i = 0; i < sum.length; i++ )
+            {
+                float value = sum[i] / count[i];
+                value *= sldVolume.getValue() / 100.0f;
+                max[i] = Math.min(1.0f, Math.max(1.0f, Math.max(value, max[i])));
+                lastValue[i] = Math.max(lastValue[i] * (sldDecay.getValue() / 100.0f), value);
+                int   intValue = (int) (100 * lastValue[i] / max[i]);
+                sldSpectrum[i].setValue(intValue);
+            }
+            
+            sendUpdate();
+        }
+        
+        private final float[] lastValue;
+        private final float[] sum;
+        private final float[] max;
+        private final int[]   count;
+    }
+    
 }

@@ -33,7 +33,8 @@ public class Stripes extends AbstractVisual
         this.parmSizeY  = new DefaultParameter("sizeY", sizeY);     parameters.add(this.parmSizeY);
         this.parmStepX  = new DefaultParameter("stepX", stepX);     parameters.add(this.parmStepX);
         this.parmStepY  = new DefaultParameter("stepY", stepY);     parameters.add(this.parmStepY);
-        this.parmOffset = new ModuloParameter( "offset", 0, -1, 1); parameters.add(this.parmOffset);
+        this.parmOffset = new ModuloParameter( "offset", 0, -independentStripes, independentStripes); 
+                                                                    parameters.add(this.parmOffset);
 
         this.parmStroke = new Parameter[independentStripes];
         for (int i = 0; i < parmStroke.length; i++)
@@ -62,16 +63,21 @@ public class Stripes extends AbstractVisual
         float y  = y1;
 
         // apply offset
-        final float off = parmOffset.get();
+        float off = parmOffset.get();
+        int   idx = (int) parmOffset.get();
+        off -= idx;
         x1 += off * dX;
         x2 += off * dX;
         y  += off * dY;
         
         // draw the bars
-        int idx  = 0;
+        idx = -idx;
         int dIdx = (parmStroke.length > 1) ? 1 : 0;
         while ( y <= y2 )
         {
+            while ( idx < 0                  ) { idx += parmStroke.length; }
+            while ( idx >= parmStroke.length ) { idx -= parmStroke.length; }
+        
             final float sY  = parmStroke[idx].get() / 2.0f; 
             final float sX  = dX * sY / dY;
 
@@ -81,9 +87,9 @@ public class Stripes extends AbstractVisual
                 g.vertex(x2+sX, y+sY); // BR
                 g.vertex(x1+sX, y+sY); // BL
             g.endShape();
-            y  += dY;
-            x1 += dX;
-            x2 += dX;
+            y   += dY;
+            x1  += dX;
+            x2  += dX;
             idx += dIdx;
             if ( (idx == parmStroke.length - 1) || (idx == 0) ) { dIdx *= -1; }
         }

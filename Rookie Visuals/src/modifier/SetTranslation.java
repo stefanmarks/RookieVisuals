@@ -24,7 +24,6 @@ public class SetTranslation extends AbstractMultiModifier
     {
         if ( visualParams[0] != null ) { visualParams[0].set(tX.get()); }
         if ( visualParams[1] != null ) { visualParams[1].set(tY.get()); }
-        finished = true; // one-shot modifier
     }
 
     
