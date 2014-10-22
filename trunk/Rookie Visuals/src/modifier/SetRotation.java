@@ -21,7 +21,6 @@ public class SetRotation extends AbstractSingleModifier
     public void apply(TimeBase timeBase)
     {
         if ( visualParam != null ) { visualParam.set(parmAngle.get()); }
-        finished = true; // one-shot
     }
 
     

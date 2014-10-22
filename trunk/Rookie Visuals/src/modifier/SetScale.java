@@ -29,7 +29,6 @@ public class SetScale extends AbstractMultiModifier
     {
         if ( visualParams[0] != null ) { visualParams[0].set(sX.get()); }
         if ( visualParams[1] != null ) { visualParams[1].set(sY.get()); }
-        finished = true; // one-shot
     }
 
     

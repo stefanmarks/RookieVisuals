@@ -26,6 +26,12 @@ public class RookieVisualsVariables
         currentName = new OSCParameter<>("/name",      "");  paramList.add(currentName);
         logoVisible = new OSCParameter<>("/logo",    true);  paramList.add(logoVisible);
         curtainOpen = new OSCParameter<>("/curtain", false); paramList.add(curtainOpen);
+        
+        spectrum = new OSCParameter[10];
+        for ( int i = 0 ; i < spectrum.length ; i++ )
+        {
+            spectrum[i] = new OSCParameter<>("/spectrum" + i, 0.0f); paramList.add(spectrum[i]);
+        }
     }
 
     
@@ -64,19 +70,6 @@ public class RookieVisualsVariables
     }
     
     
-    public OSCParameter findShaperVar(String name)
-    {
-        for ( OSCParameter param : paramList )
-        {
-            if ( param.getAddress().equals("/shaper/" + name) ) 
-            {
-                return param;
-            }
-        }
-        return null;
-    }
-    
-    
     public void writeToStream(PrintStream os)
     {
         for ( OSCParameter param : paramList )
@@ -111,6 +104,7 @@ public class RookieVisualsVariables
     public OSCParameter<String>  currentName;
     public OSCParameter<Boolean> curtainOpen;
     public OSCParameter<Boolean> logoVisible;
+    public OSCParameter<Float>[] spectrum;
     
     private final List<OSCParameter>  paramList;
 }
