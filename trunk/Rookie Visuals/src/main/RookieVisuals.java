@@ -614,7 +614,6 @@ public class RookieVisuals extends PApplet
     private       OSCPortIn              oscReceiver;
     
     // live audio input
-    private AudioManager      audioManager;
     private Minim             minim;
     private SpectrumAnalyser  audioAnalyser;
     
