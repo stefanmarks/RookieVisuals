@@ -22,6 +22,7 @@ import javax.swing.JTextArea;
 import modifier.ConstantChange;
 import modifier.AudioSignal_FrequencyIntensity;
 import modifier.OSCVariable;
+import modifier.OffsetValue;
 import modifier.RandomGlitch;
 import modifier.SetRotation;
 import modifier.SetTranslation;
@@ -70,6 +71,7 @@ public class RookieVisuals extends PApplet
         timeBase      = new TimeBase(60);
         visualManager = new VisualManager();
         vars          = new RookieVisualsVariables();
+        nameRowCount  = 0;
     }
     
          
@@ -113,7 +115,6 @@ public class RookieVisuals extends PApplet
         setupOSC();
         
         vars.currentName.registerListener(new NameChangeListener());
-        vars.curtainOpen.registerListener(new CurtainChangeListener());
         vars.logoVisible.registerListener(new LogoChangeListener());
     }
 
@@ -184,10 +185,10 @@ public class RookieVisuals extends PApplet
         }
         visualManager.add(visCurtain2);
         
-        curtainOffset    = new TimedOffset[2];
-        curtainOffset[0] = new TimedOffset("tX", 0, mirrored ?  0.1f : -0.1f, 1);
+        curtainOffset    = new OffsetValue[2];
+        curtainOffset[0] = new OffsetValue("tX", 0);
         visCurtain1.addModifier(curtainOffset[0]);
-        curtainOffset[1] = new TimedOffset("tX", 0, mirrored ? -0.1f :  0.1f, 1);
+        curtainOffset[1] = new OffsetValue("tX", 0);
         visCurtain2.addModifier(curtainOffset[1]);
     }
     
@@ -214,23 +215,60 @@ public class RookieVisuals extends PApplet
     
     private Visual getNameVisual(String name)
     {
+        nameRowCount = 0; 
+                
         if ( !name.isEmpty() )
         {
-            // break and align name
-            final String spaces = "                                              ";
-            name = name.trim().replaceFirst(" ", "\n");
-            int breakIdx = name.indexOf('\n');
-            if ( breakIdx > 0 )
+            // split into parts between spaces
+            String[]   nameParts = name.trim().split(" ");
+            // prepare name matrix
+            String[][] partMatrix = new String[2][nameParts.length];
+            int col = 0; // column index
+            int row = 0; // row index
+            
+            while ( row < nameParts.length )
             {
-                String[] parts = name.split("\n");
-                if ( mirrored )
+                String  part    = nameParts[row];
+                boolean newName = part.equals("&");
+                if ( newName )
                 {
-                    name = parts[0] + "\n" + spaces.substring(0, breakIdx * 4) + parts[1];
+                    col = 0; // start first column again
+                }
+                partMatrix[col][row] = part;
+                if ( !newName )
+                {   
+                    // first part of name has been done, next column
+                    col = 1;
+                }
+                row++;
+            }
+            
+            // add aligning spaces
+            final String spaces = "                                                                                                                                                          ";
+            for ( int r = 0 ; r < row ; r++ )
+            {
+                if ( partMatrix[0][r] == null )
+                {
+                    partMatrix[0][r] = spaces.substring(0, partMatrix[1][r].length() * 3);
                 }
                 else
                 {
-                    name = parts[0] + "\n" + parts[1] + spaces.substring(0, breakIdx * 4);
+                    partMatrix[1][r] = spaces.substring(0, partMatrix[0][r].length() * 3);
                 }
+            }
+            // assemble final string
+            name = "";
+            for ( int r = 0 ; r < row ; r++ )
+            {
+                for ( int c = 0 ; c < 2 ; c++ )
+                { 
+                    name += partMatrix[c][r];
+                }
+                if ( r < row - 1 ) // don't add at end
+                {
+                    nameRowCount++;
+                    name += "\n";
+                } 
             }
         }
         
@@ -241,9 +279,8 @@ public class RookieVisuals extends PApplet
         i.textAlign(mirrored ? LEFT : RIGHT);
         i.textLeading(45);
         i.fill(color(0));
-        i.text(name.toUpperCase(), mirrored ? 10 : 990, 220);
+        i.text(name.toUpperCase(), mirrored ? 10 : 990, 222 - 45 * nameRowCount / 2);
         Visual v = new SplitImage("Name", i, mirrored ? -45 : 45);
-        v.addModifier(new SetTranslation(mirrored ? 0.035f : -0.035f, 0)); 
         v.addModifier(new SetScale(0.25f)); 
         v.addModifier(new SetRotation(mirrored ? 45 : -45));
         v.addModifier(new RandomGlitch("tX", 0.02f, -0.2f, 0.1f));
@@ -259,6 +296,8 @@ public class RookieVisuals extends PApplet
     {
         timeBase.tick();
         visualManager.update(timeBase);
+        
+        checkCurtain();
         
         background(color(255));
         
@@ -375,21 +414,17 @@ public class RookieVisuals extends PApplet
         Boolean mirrored   = null;
         for ( String arg : args )
         {
-            switch ( arg.toLowerCase() )
+            arg = arg.toLowerCase();
+            if      ( arg.equals("-r" ) ) { runRemoteControl = true; }
+            else if ( arg.equals("-a" ) ) { usesAudio  = true;  }
+            else if ( arg.equals("-na") ) { usesAudio  = false; }
+            else if ( arg.equals("-f" ) ) { fullscreen = true;  }
+            else if ( arg.equals("-w" ) ) { fullscreen = false; }
+            else if ( arg.equals("-m" ) ) { mirrored   = true;  }
+            else if ( arg.equals("-nm") ) { mirrored   = false; }
+            else
             {
-                case "-r" : runRemoteControl = true; break;
-                case "-a" : usesAudio  = true;  break;
-                case "-na": usesAudio  = false; break;
-                case "-f" : fullscreen = true;  break;
-                case "-w" : fullscreen = false; break;
-                case "-m" : mirrored   = true;  break;
-                case "-nm": mirrored   = false; break;
-                
-                default: 
-                {
-                    System.err.println("Unknown command line option " + arg);
-                    break;
-                }
+                System.err.println("Unknown command line option " + arg);
             }
         }
         
@@ -460,6 +495,19 @@ public class RookieVisuals extends PApplet
     }
     
     
+    private void checkCurtain()
+    {
+        float targetValue = 0;
+        if ( vars.curtainOpen.get() && visName.isEnabled() )
+        {
+            targetValue = (nameRowCount + 1) * 0.04f * (mirrored ? -1 : 1);
+        }
+        
+        curtainOffset[0].lerpOffset(-targetValue, 2 * timeBase.frameTime);
+        curtainOffset[1].lerpOffset( targetValue, 2 * timeBase.frameTime);
+    }
+    
+    
     private static boolean checkOption(String message, String title)
     {
         int choice = JOptionPane.showConfirmDialog(null, message, title,
@@ -501,23 +549,6 @@ public class RookieVisuals extends PApplet
     /**
      * Listener for changes in the curtain opening.
      */
-    private class CurtainChangeListener implements OSCParameterListener<Boolean>
-    {
-        @Override
-        public void valueChanged(OSCParameter<Boolean> param)
-        {
-            for ( TimedOffset o : curtainOffset )
-            {
-                if ( param.get() ) { o.forwards(); }
-                else               { o.backwards(); }
-            }
-        }
-    }
-    
-    
-    /**
-     * Listener for changes in the curtain opening.
-     */
     private class LogoChangeListener implements OSCParameterListener<Boolean>
     {
         @Override
@@ -548,7 +579,8 @@ public class RookieVisuals extends PApplet
     private final VisualManager visualManager;
     
     private Visual        visLogo, visName, visCurtain1, visCurtain2;
-    private TimedOffset[] curtainOffset;
+    private int           nameRowCount;
+    private OffsetValue[] curtainOffset;
     
     private String[] names;
     private int      nameIdx;

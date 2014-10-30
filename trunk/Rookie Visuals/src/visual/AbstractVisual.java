@@ -28,7 +28,7 @@ public abstract class AbstractVisual implements Visual
     {
         this.name  = name;
         
-        modifiers  = new LinkedList<>();
+        modifiers  = new LinkedList<Modifier>();
         parameters = new ParameterList();
         // create parameter list
         paramPosX   = new DefaultParameter("tX", 0);    parameters.add(paramPosX);

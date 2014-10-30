@@ -66,7 +66,7 @@ public class AudioManager
      */
     private void collectPortMixerInformation()
     {
-        audioInputs = new LinkedList<>();
+        audioInputs = new LinkedList<AudioInput>();
         
         final Port.Info searchInfos[] = { Port.Info.LINE_IN, Port.Info.MICROPHONE };
         

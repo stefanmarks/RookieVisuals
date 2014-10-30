@@ -17,8 +17,8 @@ public class ParameterList
 {
     public ParameterList()
     {
-        parameters        = new HashMap<>();
-        parametersOrdered = new LinkedList<>();
+        parameters        = new HashMap<String, Parameter>();
+        parametersOrdered = new LinkedList<Parameter>();
     }
     
     

@@ -15,8 +15,6 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.DefaultListModel;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
@@ -38,7 +36,7 @@ public class RookieVisualsRemoteController extends javax.swing.JFrame
      */
     public RookieVisualsRemoteController(AudioInput input)
     {
-        clients = new DefaultListModel<>();
+        clients = new DefaultListModel<RookieVisualClient>();
         vars    = new RookieVisualsVariables();
         
         clients.addElement(new RookieVisualClient("localhost"));
@@ -489,7 +487,7 @@ public class RookieVisualsRemoteController extends javax.swing.JFrame
         {
             inputNames[i] = inputs.get(i).toString();
         }
-        JComboBox<String> cbxAudioInput = new JComboBox<>(inputNames);
+        JComboBox<String> cbxAudioInput = new JComboBox<String>(inputNames);
         int choice = JOptionPane.showConfirmDialog(null, 
                 cbxAudioInput,
                 "Select an Audio Input",
