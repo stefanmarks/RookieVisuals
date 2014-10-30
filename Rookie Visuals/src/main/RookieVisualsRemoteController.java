@@ -33,13 +33,15 @@ public class RookieVisualsRemoteController extends javax.swing.JFrame
 {
     /**
      * Creates a new SoundBite controller.
+     * 
+     * @param input the audio input to use for spectrum analysis
      */
     public RookieVisualsRemoteController(AudioInput input)
     {
-        clients = new DefaultListModel<RookieVisualClient>();
-        vars    = new RookieVisualsVariables();
+        vars = new RookieVisualsVariables();
         
-        clients.addElement(new RookieVisualClient("localhost"));
+        clients = new DefaultListModel<RookieVisualClient>();
+        loadClientList();
 
         nameListModel = new DefaultListModel();
         loadNameList();
@@ -58,6 +60,8 @@ public class RookieVisualsRemoteController extends javax.swing.JFrame
         initSpectrumSliders();
         
         audioAnalyser.registerListener(new SpectrumListener());
+        
+        sendUpdate(true); // initialise clients
     }
 
     
@@ -69,10 +73,10 @@ public class RookieVisualsRemoteController extends javax.swing.JFrame
             BufferedReader br = new BufferedReader(new FileReader(listFile));
             while ( br.ready() )
             {
-                String s = br.readLine();
-                if ( !s.isEmpty() )
+                String name = br.readLine();
+                if ( !name.isEmpty() )
                 {
-                    nameListModel.addElement(s);
+                    nameListModel.addElement(name);
                 }
             }
         }
@@ -84,6 +88,33 @@ public class RookieVisualsRemoteController extends javax.swing.JFrame
                     JOptionPane.ERROR_MESSAGE);
         }
     }
+
+    
+    private void loadClientList()
+    {
+        clients.addElement(new RookieVisualClient("localhost"));
+        try
+        {
+            File listFile = new File("./clients.txt");
+            BufferedReader br = new BufferedReader(new FileReader(listFile));
+            while ( br.ready() )
+            {
+                String address = br.readLine();
+                if ( !address.isEmpty() )
+                {
+                    clients.addElement(new RookieVisualClient(address));
+                }
+            }
+        }
+        catch ( IOException e )
+        {
+            JOptionPane.showMessageDialog(this, 
+                    "Could not load client address list.",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
     
     /**
      * Sets up the controls
@@ -354,6 +385,7 @@ public class RookieVisualsRemoteController extends javax.swing.JFrame
                     JOptionPane.ERROR_MESSAGE);
             }
         }
+        sendUpdate(true); // initialise new client
     }//GEN-LAST:event_btnAddActionPerformed
 
     
@@ -392,9 +424,9 @@ public class RookieVisualsRemoteController extends javax.swing.JFrame
     private void btnCurtainActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_btnCurtainActionPerformed
     {//GEN-HEADEREND:event_btnCurtainActionPerformed
         boolean curtainOpen = btnCurtain.isSelected();
-        btnCurtain.setText(curtainOpen ? "Open" : "Closed");
+        btnCurtain.setText(curtainOpen ? "Active" : "Closed");
         vars.curtainOpen.set(curtainOpen);
-        sendUpdate();
+        sendUpdate(false);
     }//GEN-LAST:event_btnCurtainActionPerformed
 
     
@@ -407,7 +439,7 @@ public class RookieVisualsRemoteController extends javax.swing.JFrame
         {
             vars.currentName.set("");
         }
-        sendUpdate();
+        sendUpdate(false);
     }//GEN-LAST:event_btnLogoActionPerformed
 
     
@@ -428,14 +460,14 @@ public class RookieVisualsRemoteController extends javax.swing.JFrame
             lstNames.ensureIndexIsVisible(idx);
         }
         vars.currentName.set(lstNames.getSelectedValue().toString());
-        sendUpdate();
+        sendUpdate(false);
     }//GEN-LAST:event_btnNextNameActionPerformed
 
     
     private void btnHideNameActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_btnHideNameActionPerformed
     {//GEN-HEADEREND:event_btnHideNameActionPerformed
         vars.currentName.set("");
-        sendUpdate();
+        sendUpdate(false);
     }//GEN-LAST:event_btnHideNameActionPerformed
 
     
@@ -452,17 +484,20 @@ public class RookieVisualsRemoteController extends javax.swing.JFrame
                 lstNames.setSelectedIndex(0);
             }
             vars.currentName.set(lstNames.getSelectedValue().toString());
-            sendUpdate();
+            sendUpdate(false);
         }
     }//GEN-LAST:event_lstNamesMouseClicked
 
     
     /**
      * Sends a message only with updated values.
+     * 
+     * @param fullUpdate <code>true</code> for sending all variable values,
+     *                   <code>false</code> for only sending incremetal updates
      */
-    private void sendUpdate()
+    private void sendUpdate(boolean fullUpdate)
     {
-        OSCPacket packet  = vars.getUpdatePacket();
+        OSCPacket packet  = fullUpdate ? vars.getFullPacket() : vars.getUpdatePacket();
         Object[]  targets = lstClients.getSelectedValuesList().toArray();
         if ( targets.length == 0 )
         {
@@ -650,7 +685,7 @@ public class RookieVisualsRemoteController extends javax.swing.JFrame
                 sldSpectrum[i].setValue(intValue);
             }
             
-            sendUpdate();
+            sendUpdate(false);
         }
         
         private final float[] lastValue;
