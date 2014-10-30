@@ -140,24 +140,25 @@ public class RookieVisuals extends PApplet
         visName = getNameVisual(vars.currentName.get());
         visualManager.add(visName);
 
+        final float thinLine = 0.005f;
         visCurtain1 = new Stripes("StripesL", 5, 2.0f, 1.2f, mirrored ? 0.1f : -0.1f, 0.1f, 0.01f);
         visCurtain1.addModifier(new SetTranslation(mirrored ? -0.6f : -1.4f, -0.6f)); 
         visCurtain1.addModifier(new ConstantChange("offset", 0.5f));
         if ( audioInput != null )
         {
-            visCurtain1.addModifier(new AudioSignal_FrequencyIntensity("stroke[0]", audioAnalyser,  2, 0.01f, 0.1f)); // react to low frequencies
-            visCurtain1.addModifier(new AudioSignal_FrequencyIntensity("stroke[1]", audioAnalyser,  5, 0.01f, 0.2f));
-            visCurtain1.addModifier(new AudioSignal_FrequencyIntensity("stroke[2]", audioAnalyser,  8, 0.01f, 0.3f));
-            visCurtain1.addModifier(new AudioSignal_FrequencyIntensity("stroke[3]", audioAnalyser, 12, 0.01f, 0.2f));
-            visCurtain1.addModifier(new AudioSignal_FrequencyIntensity("stroke[4]", audioAnalyser, 17, 0.01f, 0.3f));
+            visCurtain1.addModifier(new AudioSignal_FrequencyIntensity("stroke[0]", audioAnalyser,  2, thinLine, 0.1f)); // react to low frequencies
+            visCurtain1.addModifier(new AudioSignal_FrequencyIntensity("stroke[1]", audioAnalyser,  5, thinLine, 0.2f));
+            visCurtain1.addModifier(new AudioSignal_FrequencyIntensity("stroke[2]", audioAnalyser,  8, thinLine, 0.3f));
+            visCurtain1.addModifier(new AudioSignal_FrequencyIntensity("stroke[3]", audioAnalyser, 12, thinLine, 0.2f));
+            visCurtain1.addModifier(new AudioSignal_FrequencyIntensity("stroke[4]", audioAnalyser, 17, thinLine, 0.3f));
         }
         else
         {
-            visCurtain1.addModifier(new OSCVariable("stroke[0]", vars.spectrum[0], 0.01f, 0.1f)); // react to low frequencies
-            visCurtain1.addModifier(new OSCVariable("stroke[1]", vars.spectrum[2], 0.01f, 0.2f));
-            visCurtain1.addModifier(new OSCVariable("stroke[2]", vars.spectrum[4], 0.01f, 0.3f));
-            visCurtain1.addModifier(new OSCVariable("stroke[3]", vars.spectrum[6], 0.01f, 0.2f));
-            visCurtain1.addModifier(new OSCVariable("stroke[4]", vars.spectrum[8], 0.01f, 0.3f)); // react to high frequencies
+            visCurtain1.addModifier(new OSCVariable("stroke[0]", vars.spectrum[0], thinLine, 0.1f)); // react to low frequencies
+            visCurtain1.addModifier(new OSCVariable("stroke[1]", vars.spectrum[2], thinLine, 0.2f));
+            visCurtain1.addModifier(new OSCVariable("stroke[2]", vars.spectrum[4], thinLine, 0.3f));
+            visCurtain1.addModifier(new OSCVariable("stroke[3]", vars.spectrum[6], thinLine, 0.2f));
+            visCurtain1.addModifier(new OSCVariable("stroke[4]", vars.spectrum[8], thinLine, 0.3f)); // react to high frequencies
         }
         visualManager.add(visCurtain1);
         
@@ -166,19 +167,19 @@ public class RookieVisuals extends PApplet
         visCurtain2.addModifier(new ConstantChange("offset", -0.5f));
         if ( audioInput != null )
         {        
-            visCurtain2.addModifier(new AudioSignal_FrequencyIntensity("stroke[0]", audioAnalyser,  3, 0.01f, 0.1f)); // react to high frequencies
-            visCurtain2.addModifier(new AudioSignal_FrequencyIntensity("stroke[1]", audioAnalyser,  7, 0.01f, 0.2f));
-            visCurtain2.addModifier(new AudioSignal_FrequencyIntensity("stroke[2]", audioAnalyser, 10, 0.01f, 0.3f));
-            visCurtain2.addModifier(new AudioSignal_FrequencyIntensity("stroke[3]", audioAnalyser, 15, 0.01f, 0.4f));
-            visCurtain2.addModifier(new AudioSignal_FrequencyIntensity("stroke[4]", audioAnalyser, 20, 0.01f, 0.3f));
+            visCurtain2.addModifier(new AudioSignal_FrequencyIntensity("stroke[0]", audioAnalyser,  3, thinLine, 0.1f)); // react to high frequencies
+            visCurtain2.addModifier(new AudioSignal_FrequencyIntensity("stroke[1]", audioAnalyser,  7, thinLine, 0.2f));
+            visCurtain2.addModifier(new AudioSignal_FrequencyIntensity("stroke[2]", audioAnalyser, 10, thinLine, 0.3f));
+            visCurtain2.addModifier(new AudioSignal_FrequencyIntensity("stroke[3]", audioAnalyser, 15, thinLine, 0.4f));
+            visCurtain2.addModifier(new AudioSignal_FrequencyIntensity("stroke[4]", audioAnalyser, 20, thinLine, 0.3f));
         }
         else
         {
-            visCurtain2.addModifier(new OSCVariable("stroke[0]", vars.spectrum[1], 0.01f, 0.1f)); // react to low frequencies
-            visCurtain2.addModifier(new OSCVariable("stroke[1]", vars.spectrum[3], 0.01f, 0.2f));
-            visCurtain2.addModifier(new OSCVariable("stroke[2]", vars.spectrum[5], 0.01f, 0.3f));
-            visCurtain2.addModifier(new OSCVariable("stroke[3]", vars.spectrum[7], 0.01f, 0.4f));
-            visCurtain2.addModifier(new OSCVariable("stroke[4]", vars.spectrum[9], 0.01f, 0.3f)); // react to high frequencies
+            visCurtain2.addModifier(new OSCVariable("stroke[0]", vars.spectrum[1], thinLine, 0.1f)); // react to low frequencies
+            visCurtain2.addModifier(new OSCVariable("stroke[1]", vars.spectrum[3], thinLine, 0.2f));
+            visCurtain2.addModifier(new OSCVariable("stroke[2]", vars.spectrum[5], thinLine, 0.3f));
+            visCurtain2.addModifier(new OSCVariable("stroke[3]", vars.spectrum[7], thinLine, 0.4f));
+            visCurtain2.addModifier(new OSCVariable("stroke[4]", vars.spectrum[9], thinLine, 0.3f)); // react to high frequencies
         }
         visualManager.add(visCurtain2);
         
