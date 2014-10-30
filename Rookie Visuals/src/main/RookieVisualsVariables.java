@@ -21,16 +21,16 @@ public class RookieVisualsVariables
 {
     public RookieVisualsVariables()
     {
-        paramList = new LinkedList<>();
+        paramList = new LinkedList<OSCParameter>();
         
-        currentName = new OSCParameter<>("/name",      "");  paramList.add(currentName);
-        logoVisible = new OSCParameter<>("/logo",    true);  paramList.add(logoVisible);
-        curtainOpen = new OSCParameter<>("/curtain", false); paramList.add(curtainOpen);
+        currentName = new OSCParameter<String>( "/name",      "");  paramList.add(currentName);
+        logoVisible = new OSCParameter<Boolean>("/logo",    true);  paramList.add(logoVisible);
+        curtainOpen = new OSCParameter<Boolean>("/curtain", false); paramList.add(curtainOpen);
         
         spectrum = new OSCParameter[10];
         for ( int i = 0 ; i < spectrum.length ; i++ )
         {
-            spectrum[i] = new OSCParameter<>("/spectrum" + i, 0.0f); paramList.add(spectrum[i]);
+            spectrum[i] = new OSCParameter<Float>("/spectrum" + i, 0.0f); paramList.add(spectrum[i]);
         }
     }
 

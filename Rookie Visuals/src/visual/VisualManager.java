@@ -18,7 +18,7 @@ public class VisualManager
      */
     public VisualManager()
     {
-        visuals = new LinkedList<>();
+        visuals = new LinkedList<Visual>();
     }
     
     
