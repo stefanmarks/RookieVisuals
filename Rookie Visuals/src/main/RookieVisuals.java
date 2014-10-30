@@ -16,6 +16,7 @@ import java.net.SocketException;
 import java.util.List;
 import java.util.logging.Handler;
 import java.util.logging.Logger;
+import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -55,16 +56,16 @@ public class RookieVisuals extends PApplet
     /**
      * Creates an instance of the Rookie Visuals program.
      * 
-     * @param usesAudio  <code>true</code> if program does sound analysis,
+     * @param input      the Audio input to use or <code>null</code> for no audio
      *                   <code>false</code> if program relies on OSC sound analysis variables
      * @param fullscreen <code>true</code> if program should run in fullscreen mode,
      *                   <code>false</code> if program should run in window
      * @param mirrored   <code>true</code> if program should run in mirror mode,
      *                   <code>false</code> if not
      */
-    public RookieVisuals(boolean usesAudio, boolean fullscreen, boolean mirrored)
+    public RookieVisuals(AudioInput input, boolean fullscreen, boolean mirrored)
     {
-        this.usesAudio       = usesAudio;
+        this.audioInput      = input;
         this.runInFullscreen = fullscreen;
         this.mirrored        = mirrored;
         
@@ -95,14 +96,10 @@ public class RookieVisuals extends PApplet
         frameRate(timeBase.frameRate);
         noCursor();
         
-        if ( usesAudio )
+        if ( audioInput != null )
         {
-            // find inputs
-            audioManager = new AudioManager();
-            List<AudioInput> inputs = audioManager.getInputs();
-            AudioInput input = inputs.get(0);
             minim = new Minim(null);
-            minim.setInputMixer(input.getMixer());
+            minim.setInputMixer(audioInput.getMixer());
 
             // create audio analyser
             audioAnalyser = new SpectrumAnalyser(25, 20, 3, 1);
@@ -146,7 +143,7 @@ public class RookieVisuals extends PApplet
         visCurtain1 = new Stripes("StripesL", 5, 2.0f, 1.2f, mirrored ? 0.1f : -0.1f, 0.1f, 0.01f);
         visCurtain1.addModifier(new SetTranslation(mirrored ? -0.6f : -1.4f, -0.6f)); 
         visCurtain1.addModifier(new ConstantChange("offset", 0.5f));
-        if ( usesAudio )
+        if ( audioInput != null )
         {
             visCurtain1.addModifier(new AudioSignal_FrequencyIntensity("stroke[0]", audioAnalyser,  2, 0.01f, 0.1f)); // react to low frequencies
             visCurtain1.addModifier(new AudioSignal_FrequencyIntensity("stroke[1]", audioAnalyser,  5, 0.01f, 0.2f));
@@ -167,7 +164,7 @@ public class RookieVisuals extends PApplet
         visCurtain2 = new Stripes("StripesR", 5, 2.0f, 1.2f, mirrored ? 0.1f : -0.1f, 0.1f, 0.01f);
         visCurtain2.addModifier(new SetTranslation(mirrored ? -2.6f : 0.6f, -0.6f)); 
         visCurtain2.addModifier(new ConstantChange("offset", -0.5f));
-        if ( usesAudio )
+        if ( audioInput != null )
         {        
             visCurtain2.addModifier(new AudioSignal_FrequencyIntensity("stroke[0]", audioAnalyser,  3, 0.01f, 0.1f)); // react to high frequencies
             visCurtain2.addModifier(new AudioSignal_FrequencyIntensity("stroke[1]", audioAnalyser,  7, 0.01f, 0.2f));
@@ -226,6 +223,12 @@ public class RookieVisuals extends PApplet
             int col = 0; // column index
             int row = 0; // row index
             
+            // distribute names into 2 column table
+            // firstN1 | null
+            // null    | lastN1
+            // &       | null
+            // firstN2 | null
+            // null    | lastN2
             while ( row < nameParts.length )
             {
                 String  part    = nameParts[row];
@@ -245,24 +248,35 @@ public class RookieVisuals extends PApplet
             
             // add aligning spaces
             final String spaces = "                                                                                                                                                          ";
+            final int    spaceMultiplier = mirrored ? 4 : 3;
             for ( int r = 0 ; r < row ; r++ )
             {
-                if ( partMatrix[0][r] == null )
+                // fill empty first name with spaces from first name above
+                if ( (partMatrix[0][r] == null) && (r > 0) && (partMatrix[0][r - 1] != null))
                 {
-                    partMatrix[0][r] = spaces.substring(0, partMatrix[1][r].length() * 3);
+                    partMatrix[0][r] = spaces.substring(0, partMatrix[0][r - 1].length() * spaceMultiplier);
                 }
-                else
+                // fill empty last name with spaces from last name below
+                if ( (partMatrix[1][r] == null) && (r < row-1) && (partMatrix[1][r + 1] != null) )
                 {
-                    partMatrix[1][r] = spaces.substring(0, partMatrix[0][r].length() * 3);
+                    partMatrix[1][r] = spaces.substring(0, partMatrix[1][r + 1].length() * spaceMultiplier);
                 }
             }
             // assemble final string
             name = "";
             for ( int r = 0 ; r < row ; r++ )
             {
+                if ( mirrored ) 
+                {
+                    name += spaces.substring(0, 4 * (row - 1 - r));
+                }
                 for ( int c = 0 ; c < 2 ; c++ )
                 { 
-                    name += partMatrix[c][r];
+                    name += (partMatrix[c][r] != null) ? partMatrix[c][r] : "";
+                }
+                if ( !mirrored )
+                {
+                    name += spaces.substring(0, 4 * (row - 1 - r));
                 }
                 if ( r < row - 1 ) // don't add at end
                 {
@@ -272,14 +286,14 @@ public class RookieVisuals extends PApplet
             }
         }
         
-        PGraphics i = createGraphics(1000, 400);
+        PGraphics i = createGraphics(1100, 400);
         PFont     f = createFont("TheFont.otf", 1, true);
         i.textFont(f);
         i.textSize(65);
         i.textAlign(mirrored ? LEFT : RIGHT);
         i.textLeading(45);
         i.fill(color(0));
-        i.text(name.toUpperCase(), mirrored ? 10 : 990, 222 - 45 * nameRowCount / 2);
+        i.text(name.toUpperCase(), mirrored ? 10 : 1090, 222 - 45 * nameRowCount / 2);
         Visual v = new SplitImage("Name", i, mirrored ? -45 : 45);
         v.addModifier(new SetScale(0.25f)); 
         v.addModifier(new SetRotation(mirrored ? 45 : -45));
@@ -408,10 +422,11 @@ public class RookieVisuals extends PApplet
         logger.addHandler(handler);     
 
         // check command line parameters
-        Boolean runRemoteControl = null;
-        Boolean usesAudio  = null;
-        Boolean fullscreen = null;
-        Boolean mirrored   = null;
+        Boolean    runRemoteControl = null;
+        Boolean    usesAudio  = null;
+        AudioInput input      = null;
+        Boolean    fullscreen = null;
+        Boolean    mirrored   = null;
         for ( String arg : args )
         {
             arg = arg.toLowerCase();
@@ -449,6 +464,11 @@ public class RookieVisuals extends PApplet
                     "Use Audio Input?"); 
         }
         
+        if ( usesAudio )
+        {
+            input = selectAudioInput();
+        }
+        
         if ( fullscreen == null )
         {
             // no command line option given -> ask user
@@ -466,7 +486,7 @@ public class RookieVisuals extends PApplet
         }
 
         // create program instance
-        final RookieVisuals p = new RookieVisuals(usesAudio, fullscreen, mirrored);
+        final RookieVisuals p = new RookieVisuals(input, fullscreen, mirrored);
 
         // in case of an exception, show a swing dialog box
         Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler() {
@@ -500,7 +520,8 @@ public class RookieVisuals extends PApplet
         float targetValue = 0;
         if ( vars.curtainOpen.get() && visName.isEnabled() )
         {
-            targetValue = (nameRowCount + 1) * 0.04f * (mirrored ? -1 : 1);
+            targetValue  = (nameRowCount > 0) ? (nameRowCount + 1) * 0.04f : 0;
+            targetValue *= (mirrored ? -1 : 1);
         }
         
         curtainOffset[0].lerpOffset(-targetValue, 2 * timeBase.frameTime);
@@ -520,6 +541,29 @@ public class RookieVisuals extends PApplet
         }
         
         return choice == JOptionPane.YES_OPTION;
+    }     
+       
+    
+    public static AudioInput selectAudioInput()
+    {
+        AudioInput selection = null;
+        AudioManager audioManager = new AudioManager();
+        List<AudioInput> inputs = audioManager.getInputs();
+        String[] inputNames = new String[inputs.size()];
+        for ( int i = 0 ; i < inputNames.length ; i++ )
+        {
+            inputNames[i] = inputs.get(i).toString();
+        }
+        JComboBox<String> cbxAudioInput = new JComboBox<String>(inputNames);
+        int choice = JOptionPane.showConfirmDialog(null, 
+                cbxAudioInput,
+                "Select an Audio Input",
+                JOptionPane.OK_CANCEL_OPTION);
+        if ( choice == JOptionPane.OK_OPTION )
+        {
+            selection = inputs.get(cbxAudioInput.getSelectedIndex());
+        }
+        return selection;
     }     
        
     
@@ -562,9 +606,9 @@ public class RookieVisuals extends PApplet
     }
 
     
-    private final boolean  usesAudio;
-    private final boolean  runInFullscreen;
-    private final boolean  mirrored;
+    private final AudioInput audioInput;
+    private final boolean    runInFullscreen;
+    private final boolean    mirrored;
     
     private final RookieVisualsVariables vars;
     private       OSCPortIn              oscReceiver;

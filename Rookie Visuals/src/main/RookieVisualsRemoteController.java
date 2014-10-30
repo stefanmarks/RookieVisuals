@@ -480,21 +480,9 @@ public class RookieVisualsRemoteController extends javax.swing.JFrame
      */
     public static void main(String args[])
     {
-        AudioManager audioManager = new AudioManager();
-        List<AudioInput> inputs = audioManager.getInputs();
-        String[] inputNames = new String[inputs.size()];
-        for ( int i = 0 ; i < inputNames.length ; i++ )
+        AudioInput input = RookieVisuals.selectAudioInput();
+        if ( input != null )
         {
-            inputNames[i] = inputs.get(i).toString();
-        }
-        JComboBox<String> cbxAudioInput = new JComboBox<String>(inputNames);
-        int choice = JOptionPane.showConfirmDialog(null, 
-                cbxAudioInput,
-                "Select an Audio Input",
-                JOptionPane.OK_CANCEL_OPTION);
-        if ( choice == JOptionPane.OK_OPTION )
-        {
-            AudioInput input = inputs.get(cbxAudioInput.getSelectedIndex());
             JFrame app = new RookieVisualsRemoteController(input);
             app.setLocationRelativeTo(null);
             app.setVisible(true);
