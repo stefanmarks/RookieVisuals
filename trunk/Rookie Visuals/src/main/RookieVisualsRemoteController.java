@@ -1,7 +1,6 @@
 package main;
 
 import analyser.AudioInput;
-import analyser.AudioManager;
 import analyser.SpectrumAnalyser;
 import com.illposed.osc.OSCPacket;
 import com.illposed.osc.OSCParameter;
@@ -16,7 +15,6 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.List;
 import javax.swing.DefaultListModel;
-import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JSlider;
@@ -53,7 +51,7 @@ public class RookieVisualsRemoteController extends javax.swing.JFrame
         minim.setInputMixer(input.getMixer());
         
         // create audio analyser
-        audioAnalyser = new SpectrumAnalyser(30, 20, 2, 1);
+        audioAnalyser = new SpectrumAnalyser(30, 30, 3, 1);
         // attach input to audio analyser
         audioAnalyser.attachToAudio(minim.getLineIn());
         
@@ -647,7 +645,7 @@ public class RookieVisualsRemoteController extends javax.swing.JFrame
             for (int i = 0; i < n; i++)
             {
                 lastValue[i] = 0;
-                max[i]       = 1;                
+                max[i]       = 0.1f;                
             }
         }
         
@@ -662,7 +660,7 @@ public class RookieVisualsRemoteController extends javax.swing.JFrame
             for ( int i = 0; i < sum.length; i++ )
             {
                 sum[i]   = 0;
-                max[i]  *= 0.999f;
+                max[i]  *= 0.9999f;
                 count[i] = 0;
             }
             
@@ -679,7 +677,7 @@ public class RookieVisualsRemoteController extends javax.swing.JFrame
             {
                 float value = sum[i] / count[i];
                 value *= sldVolume.getValue() / 100.0f;
-                max[i] = Math.min(1.0f, Math.max(1.0f, Math.max(value, max[i])));
+                max[i] = Math.max(0.1f, Math.max(value, max[i]));
                 lastValue[i] = Math.max(lastValue[i] * (sldDecay.getValue() / 100.0f), value);
                 int   intValue = (int) (100 * lastValue[i] / max[i]);
                 sldSpectrum[i].setValue(intValue);
