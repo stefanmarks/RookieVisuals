@@ -28,7 +28,6 @@ import modifier.RandomGlitch;
 import modifier.SetRotation;
 import modifier.SetTranslation;
 import modifier.SetScale;
-import modifier.TimedOffset;
 import processing.core.PApplet;
 import processing.core.PFont;
 import processing.core.PGraphics;
@@ -102,7 +101,7 @@ public class RookieVisuals extends PApplet
             minim.setInputMixer(audioInput.getMixer());
 
             // create audio analyser
-            audioAnalyser = new SpectrumAnalyser(25, 20, 3, 1);
+            audioAnalyser = new SpectrumAnalyser(30, 30, 3, 1);
             // attach input to audio analyser
             audioAnalyser.attachToAudio(minim.getLineIn());
         }

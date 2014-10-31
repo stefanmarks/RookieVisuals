@@ -29,18 +29,20 @@ public class Stripes extends AbstractVisual
     {
         super(name);
         
-        this.parmSizeX  = new DefaultParameter("sizeX", sizeX);     parameters.add(this.parmSizeX);
-        this.parmSizeY  = new DefaultParameter("sizeY", sizeY);     parameters.add(this.parmSizeY);
-        this.parmStepX  = new DefaultParameter("stepX", stepX);     parameters.add(this.parmStepX);
-        this.parmStepY  = new DefaultParameter("stepY", stepY);     parameters.add(this.parmStepY);
-        this.parmOffset = new ModuloParameter( "offset", 0, -independentStripes, independentStripes); 
-                                                                    parameters.add(this.parmOffset);
+        this.parmSizeX  = new DefaultParameter("sizeX", sizeX); parameters.add(this.parmSizeX);
+        this.parmSizeY  = new DefaultParameter("sizeY", sizeY); parameters.add(this.parmSizeY);
+        this.parmStepX  = new DefaultParameter("stepX", stepX); parameters.add(this.parmStepX);
+        this.parmStepY  = new DefaultParameter("stepY", stepY); parameters.add(this.parmStepY);
+        this.parmOffset = new DefaultParameter("offset", 0);    parameters.add(this.parmOffset);
 
         this.parmStroke = new Parameter[independentStripes];
         for (int i = 0; i < parmStroke.length; i++)
         {
             parmStroke[i] = new DefaultParameter("stroke[" + i + "]", stroke);   parameters.add(this.parmStroke[i]);
         }
+        
+        maxIdx = Math.max(0,  parmStroke.length - 1);
+        minIdx = Math.min(0, -parmStroke.length + 2);
     }
   
   
@@ -71,27 +73,22 @@ public class Stripes extends AbstractVisual
         y  += off * dY;
         
         // draw the bars
-        idx = -idx;
-        int dIdx = (parmStroke.length > 1) ? 1 : 0;
+        idx =- idx; // without this, the bars are jumping every step
         while ( y <= y2 )
         {
-            while ( idx < 0                  ) { idx += parmStroke.length; }
-            while ( idx >= parmStroke.length ) { idx -= parmStroke.length; }
-        
-            final float sY  = parmStroke[idx].get() / 2.0f; 
+            idx = Math.floorMod((idx + 1), (maxIdx - minIdx + 1));
+            int arrIdx = Math.abs(idx + minIdx);
+            final float sY  = parmStroke[arrIdx].get() / 2.0f; 
             final float sX  = dX * sY / dY;
-
             g.beginShape();
                 g.vertex(x1-sX, y-sY); // TL
                 g.vertex(x2-sX, y-sY); // TR
                 g.vertex(x2+sX, y+sY); // BR
                 g.vertex(x1+sX, y+sY); // BL
             g.endShape();
-            y   += dY;
-            x1  += dX;
-            x2  += dX;
-            idx += dIdx;
-            if ( (idx == parmStroke.length - 1) || (idx == 0) ) { dIdx *= -1; }
+            y  += dY;
+            x1 += dX;
+            x2 += dX;
         }
         
         g.blendMode(PApplet.BLEND);
@@ -102,4 +99,5 @@ public class Stripes extends AbstractVisual
     private final Parameter   parmStepX, parmStepY;
     private final Parameter[] parmStroke;
     private final Parameter   parmOffset;
+    private final int         maxIdx, minIdx;
 }
