@@ -46,7 +46,7 @@ import visual.VisualManager;
  */
 public class RookieVisuals extends PApplet
 {
-    public static final String VERSION = "1.1";
+    public static final String VERSION = "1.2";
     
     public static final String CONFIG_FILE = "./config.txt";
     public static final String NAME_FILE   = "./names.txt";
@@ -315,9 +315,23 @@ public class RookieVisuals extends PApplet
         
         background(color(255));
         
-        translate(width / 2, height / 2); // screen centre is 0/0
-        scale(height);                    // Screen height rangs from -0.5 to 0.5
+        rectMode(CORNER);
+        int h       = height;
+        h = width * 2 / 5;
+        int w       = width;
+        int xOrigin = w / 2;
+        int yOrigin = h / 2;
+        
+        pushMatrix();
+        translate(xOrigin, yOrigin); // screen centre is 0/0
+        scale(h);                    // Screen height rangs from -0.5 to 0.5
         visualManager.render(this.g);
+        popMatrix();
+        
+        fill(0);
+        stroke(0);
+        rectMode(CORNERS);
+        rect(0, h, width, height);
     }
 
     
