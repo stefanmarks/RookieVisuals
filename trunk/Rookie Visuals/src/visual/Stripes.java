@@ -29,12 +29,7 @@ public class Stripes extends AbstractVisual
     {
         super(name);
         
-        this.parmSizeX  = new DefaultParameter("sizeX", sizeX); parameters.add(this.parmSizeX);
-        this.parmSizeY  = new DefaultParameter("sizeY", sizeY); parameters.add(this.parmSizeY);
-        this.parmStepX  = new DefaultParameter("stepX", stepX); parameters.add(this.parmStepX);
-        this.parmStepY  = new DefaultParameter("stepY", stepY); parameters.add(this.parmStepY);
-        this.parmOffset = new DefaultParameter("offset", 0);    parameters.add(this.parmOffset);
-
+        independentStripes = Math.max(1, independentStripes);
         this.parmStroke = new Parameter[independentStripes];
         for (int i = 0; i < parmStroke.length; i++)
         {
@@ -43,9 +38,33 @@ public class Stripes extends AbstractVisual
         
         maxIdx = Math.max(0,  parmStroke.length - 1);
         minIdx = Math.min(0, -parmStroke.length + 2);
+
+        this.parmSizeX  = new DefaultParameter("sizeX", sizeX); parameters.add(this.parmSizeX);
+        this.parmSizeY  = new DefaultParameter("sizeY", sizeY); parameters.add(this.parmSizeY);
+        this.parmStepX  = new DefaultParameter("stepX", stepX); parameters.add(this.parmStepX);
+        this.parmStepY  = new DefaultParameter("stepY", stepY); parameters.add(this.parmStepY);
+        this.parmOffset = new ModuloParameter("offset", 0, minIdx, maxIdx + 1); parameters.add(this.parmOffset);
     }
   
+    
+    private int floorDiv(int x, int y) 
+    {
+        int r = x / y;
+        // if the signs are different and modulo not zero, round down
+        if ((x ^ y) < 0 && (r * y != x)) {
+            r--;
+        }
+        return r;
+    }
   
+    
+    private int floorMod(int x, int y) 
+    {
+        int r = x - floorDiv(x, y) * y;
+        return r;
+    }
+    
+    
     @Override
     public void render(PGraphics g)
     {
@@ -76,7 +95,7 @@ public class Stripes extends AbstractVisual
         idx =- idx; // without this, the bars are jumping every step
         while ( y <= y2 )
         {
-            idx = Math.floorMod((idx + 1), (maxIdx - minIdx + 1));
+            idx = floorMod((idx + 1), (maxIdx - minIdx + 1));
             int arrIdx = Math.abs(idx + minIdx);
             final float sY  = parmStroke[arrIdx].get() / 2.0f; 
             final float sX  = dX * sY / dY;
