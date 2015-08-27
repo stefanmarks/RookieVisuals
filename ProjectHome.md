@@ -1,0 +1,1 @@
+Program for creating the visual background for the Rookie fashion show at AUT
